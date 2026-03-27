@@ -1,0 +1,5 @@
+{
+  "github_account": "grobomo",
+  "visibility": "public",
+  "reason": "Generic MCP server proxy router. No customer data or secrets. Personal configs (servers.yaml, hooks.yaml) excluded via .gitignore and stored as tmemu gists."
+}

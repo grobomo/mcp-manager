@@ -1,0 +1,108 @@
+# MCP Manager - Server Registry Example
+# Copy this file to servers.yaml and customize for your setup
+
+servers:
+  # ============================================================
+  # NPX Servers (recommended - always fetches latest version)
+  # ============================================================
+
+  blueprint:
+    description: Blueprint MCP - Chrome browser automation via extension
+    command: npx
+    args:
+      - "@railsblueprint/blueprint-mcp@latest"
+    enabled: true
+    auto_start: false
+    tags:
+      - browser
+      - automation
+    keywords:
+      - browser
+      - chrome
+      - navigate
+      - click
+      - screenshot
+
+  playwriter:
+    description: Playwriter MCP - Playwright API via Chrome extension
+    command: npx
+    args:
+      - playwriter@latest
+    enabled: false
+    auto_start: false
+    idle_timeout: 300000
+    startup_delay: 3000
+    tags:
+      - browser
+      - automation
+      - playwright
+
+  # ============================================================
+  # Local Node.js Servers
+  # ============================================================
+
+  my-node-server:
+    description: Example Node.js MCP server
+    command: node
+    args:
+      - ./managed-servers/my-server/dist/index.js
+    enabled: false
+    auto_start: false
+    idle_timeout: 300000
+    startup_delay: 3000
+    tags:
+      - example
+      - node
+
+  # ============================================================
+  # Local Python Servers
+  # ============================================================
+
+  my-python-server:
+    description: Example Python MCP server
+    command: python
+    args:
+      - ./managed-servers/my-server/server.py
+    enabled: false
+    auto_start: false
+    idle_timeout: 300000
+    startup_delay: 5000
+    tags:
+      - example
+      - python
+
+  # ============================================================
+  # Remote HTTP Servers
+  # ============================================================
+
+  remote-api:
+    description: Example remote HTTP MCP server
+    url: https://api.example.com/mcp
+    enabled: false
+    auto_start: false
+    idle_timeout: 300000
+    tags:
+      - remote
+      - http
+
+  # ============================================================
+  # WebSocket Servers
+  # ============================================================
+
+  websocket-server:
+    description: Example WebSocket MCP server
+    url: wss://api.example.com/mcp
+    enabled: false
+    auto_start: false
+    idle_timeout: 300000
+    tags:
+      - websocket
+
+# ============================================================
+# Defaults (apply to all servers unless overridden)
+# ============================================================
+
+defaults:
+  timeout: 30              # Request timeout in seconds
+  retry_count: 3           # Number of retries on failure
+  health_check_interval: 60  # Health check interval in seconds
