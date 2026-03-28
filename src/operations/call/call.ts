@@ -61,6 +61,64 @@ export async function call(ctx: McpmContext, params: McpmParams): Promise<Operat
     }
   }
 
+  // Blueprint-extra middleware: auto-inject client_id and auto-enable
+  if (serverName === "blueprint-extra") {
+    const clientId = ctx.projectName || "claude-code";
+
+    // Auto-inject client_id for enable tool
+    if (toolName === "enable" && !args.client_id) {
+      args.client_id = clientId;
+      ctx.log(`CALL ${serverName}:enable -> auto-injected client_id="${clientId}"`);
+    }
+
+    // Auto-enable when calling browser_* tools (blueprint requires enable first)
+    if (toolName.startsWith("browser_") || toolName === "disable" || toolName === "status") {
+      // Check if blueprint needs enabling by calling status
+      try {
+        const reqTimeout = ctx.SERVERS[serverName]?.timeout || 60000;
+        const statusResult = await ctx.callServerTool(reqTimeout, ctx.RUNNING[serverName], "status", {});
+        const statusText = statusResult?.content?.[0]?.text || JSON.stringify(statusResult);
+        const isPassive = statusText.includes('"passive"') || statusText.includes("Passive") || statusText.includes("not_enabled");
+
+        if (isPassive && toolName !== "status" && toolName !== "disable") {
+          ctx.log(`CALL ${serverName}:${toolName} -> blueprint is passive, auto-enabling...`);
+          const enableResult = await ctx.callServerTool(reqTimeout, ctx.RUNNING[serverName], "enable", { client_id: clientId });
+          const enableText = enableResult?.content?.[0]?.text || JSON.stringify(enableResult);
+          const enableFailed = enableText.includes("isError") || enableText.includes("❌");
+          if (enableFailed) {
+            ctx.log(`CALL ${serverName}:${toolName} -> auto-enable failed`);
+            return { content: [{ type: "text", text: `Auto-enable failed for blueprint-extra:\n${enableText}\n\nFix the connection issue, then retry your ${toolName} call.` }] };
+          }
+          ctx.log(`CALL ${serverName}:${toolName} -> auto-enable succeeded, proceeding with original call`);
+          // Update activity timestamp after enable
+          ctx.RUNNING[serverName].lastActivity = Date.now();
+        }
+      } catch (e: any) {
+        ctx.log(`CALL ${serverName}:${toolName} -> status check failed: ${e.message}, proceeding anyway`);
+      }
+    }
+  }
+
+  // Validate required params for non-blueprint servers (blueprint is handled above)
+  if (serverName !== "blueprint-extra") {
+    const serverTools = ctx.TOOLS[serverName] || [];
+    const toolDef = serverTools.find(t => t.name === toolName);
+    if (toolDef?.inputSchema) {
+      const schema = toolDef.inputSchema as any;
+      const required: string[] = schema.required || [];
+      const missing = required.filter(p => !(p in args) || args[p] === undefined || args[p] === "");
+      if (missing.length > 0) {
+        ctx.log(`CALL ${serverName}:${toolName} -> missing required params: ${missing.join(", ")}`);
+        return {
+          content: [{
+            type: "text",
+            text: `Error: ${serverName}:${toolName} requires: ${missing.join(", ")}`
+          }]
+        };
+      }
+    }
+  }
+
   ctx.log(`CALL ${serverName}:${toolName} args=${argsStr}`);
   const startTime = Date.now();
 

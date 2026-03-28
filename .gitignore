@@ -5,6 +5,12 @@ capabilities-cache.yaml
 metadata.yaml
 .mcp.json
 
+# Managed servers (each has its own repo)
+managed-servers/
+
+# Legacy sync scripts (no longer needed - single repo now)
+scripts/
+
 # Secrets
 *.env
 .env.*

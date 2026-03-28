@@ -2,34 +2,12 @@
 
 Dynamic MCP Server Proxy Router - manages and routes to other MCP servers.
 
-## Dev/Prod Workflow
+## Repo & Config Layout
 
-This repo is the **DEV** version (personal, may contain secrets in configs).
+**GitHub**: `grobomo/mcp-manager` (public)
 
-**Why is the GitHub repo called `mcp-dev` and not `mcp-manager`?**
-The local folder is `mcp-manager` but the GitHub repo is `mcp-dev` because this is the development copy containing personal server configs (servers.yaml) and secrets. The clean/shareable version is published separately as `mcp-manager` on grobomo. Don't rename the remote — the dev/prod split is intentional.
-
-**Repos:**
-- **Dev**: `mcp/mcp-manager` (local) -> `joel-ginsberg_tmemu/mcp-dev` on GitHub (private, personal configs)
-- **Prod**: `mcp/mcp-manager-prod` (local) -> `grobomo/mcp-manager` on GitHub (public, clean)
-
-**Sync dev to prod:**
-```bash
-./scripts/sync-to-prod.sh           # Full sync with secret scan
-./scripts/sync-to-prod.sh --dry-run # Preview changes
-```
-
-**What gets synced:**
-- Source code (src/*.ts)
-- Build config (package.json, tsconfig.json)
-- Setup script (setup.py)
-- Templates (.env.example, .gitignore)
-
-**What stays in dev only:**
-- servers.yaml (personal server configs)
-- *.env files (secrets)
-- capabilities-cache.yaml
-- node_modules/, dist/, .local/
+**What's in git:** Source code, build config, templates, GitHub Actions
+**What's NOT in git (via .gitignore):** `servers.yaml`, `hooks.yaml`, `capabilities-cache.yaml`, `.env`, `managed-servers/` — these are personal configs stored as private gists
 
 
 ## TODO
