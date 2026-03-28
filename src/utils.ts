@@ -86,3 +86,45 @@ export function generateSessionId(): string {
   const random = Math.random().toString(36).substring(2, 8);
   return `${timestamp}-${random}`;
 }
+
+/**
+ * Default idle timeout for servers: 1 hour.
+ * Single source of truth — used by idle checker, status display, and details.
+ */
+export const DEFAULT_IDLE_TIMEOUT = 3600000;
+
+/**
+ * Get process memory usage in MB by PID.
+ * Cross-platform: uses wmic on Windows, ps on Unix.
+ */
+export function getProcessMemoryMB(pid: number): number | null {
+  try {
+    const { execSync } = require("child_process");
+    if (process.platform === "win32") {
+      const output = execSync(
+        `wmic process where ProcessId=${pid} get WorkingSetSize 2>nul`,
+        { encoding: "utf-8", timeout: 5000 }
+      ).trim();
+      const match = output.match(/\d+/);
+      if (!match) return null;
+      return Math.round(parseInt(match[0], 10) / 1024 / 1024);
+    } else {
+      const output = execSync(`ps -o rss= -p ${pid}`, {
+        encoding: "utf-8",
+        timeout: 5000,
+      }).trim();
+      return Math.round(parseInt(output, 10) / 1024);
+    }
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Format MB value as human-readable string.
+ */
+export function formatBytes(mb: number | null): string {
+  if (mb === null) return "?";
+  if (mb >= 1024) return `${(mb / 1024).toFixed(1)}GB`;
+  return `${mb}MB`;
+}

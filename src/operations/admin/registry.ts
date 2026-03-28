@@ -185,7 +185,7 @@ function createMetadataYaml(ctx: McpmContext, server: DiscoveredServer): boolean
     status: server.entryPoint ? "active" : "needs_build",
     tags: [] as string[],
     tokens: "~2000",
-    maintainer: "joel",
+    maintainer: "auto-discovered",
     used_by: [],
   };
 

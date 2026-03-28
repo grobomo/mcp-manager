@@ -2,30 +2,6 @@
 
 ## Context
 Full code review identified issues during blueprint-extra client_id debugging session (2026-03-28).
-Blueprint middleware already committed. This covers remaining cleanup.
-
-## Tasks
-
-### Critical
-- [ ] Fix `package.json` main/start: points to `dist/` but build outputs to `build/`
-- [ ] Fix `DEFAULT_IDLE_TIMEOUT` inconsistency: index.ts uses 3600000 (1hr), status.ts/details.ts use 300000 (5min)
-
-### DRY
-- [ ] Extract shared `getProcessMemoryMB` + `formatBytes` to `src/utils.ts` (duplicated in status.ts and usage.ts)
-- [ ] Import shared functions in `status.ts` and `usage.ts`, remove local copies
-
-### Cleanup (archive, don't delete)
-- [ ] `src/logging.ts` — never imported, dead code. Move to `src/archive/`
-- [ ] `src/operations/organize/index.ts` — not wired into switch statement, dead code. Move to `src/archive/`
-- [ ] `src/operations/index.ts` — remove organize export after archiving
-
-### Safety
-- [ ] `src/index.ts` — add `process.on('exit')` to kill child processes (prevent orphans)
-- [ ] `src/operations/admin/registry.ts` line 189 — remove hardcoded `"joel"` maintainer (PII on public repo)
-
-### Performance
-- [ ] `src/operations/call/call.ts` — track blueprint enabled state in mcp-manager memory instead of calling status per browser_* tool
-- [ ] `src/operations/call/call.ts` — move `argsStr` computation after blueprint middleware (currently logs stale args)
 
 ## Completed
 - [x] Blueprint auto-enable middleware (call.ts) — committed 4050e4d
@@ -33,3 +9,15 @@ Blueprint middleware already committed. This covers remaining cleanup.
 - [x] PreToolUse enforcement hook (git + TODO.md checks)
 - [x] Hook module system (sm-stop.js, sm-pretooluse.js runners)
 - [x] Updated hook-manager and super-manager SKILL.md to match reality
+- [x] Fix `package.json` main/start: `dist/` -> `build/`
+- [x] Fix `DEFAULT_IDLE_TIMEOUT` inconsistency: single source of truth in utils.ts (3600000ms)
+- [x] Extract shared `getProcessMemoryMB` + `formatBytes` to utils.ts
+- [x] Import shared functions in status.ts and usage.ts
+- [x] Import shared constant in details.ts and index.ts
+- [x] Add process cleanup handler (kill child processes on exit)
+- [x] Remove hardcoded "joel" maintainer in registry.ts discover
+- [x] Archive dead code: logging.ts -> src/archive/logging.ts
+- [x] Archive dead code: organize/index.ts -> src/archive/organize.ts
+- [x] Remove organize export from operations/index.ts
+- [x] Track blueprint enabled state in memory (no status call per browser_* tool)
+- [x] Move argsStr computation after middleware (correct logging)

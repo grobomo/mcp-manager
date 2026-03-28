@@ -3,6 +3,7 @@
  */
 
 import type { McpmContext, OperationResult, McpmParams } from "../types.js";
+import { DEFAULT_IDLE_TIMEOUT } from "../../utils.js";
 
 export async function details(ctx: McpmContext, params: McpmParams): Promise<OperationResult> {
   const serverName = params.server;
@@ -47,7 +48,7 @@ export async function details(ctx: McpmContext, params: McpmParams): Promise<Ope
   }
   lines.push(`  Auto-start: ${config.auto_start ? "yes" : "no"}`);
   lines.push(`  Timeout: ${config.timeout || 60000}ms`);
-  lines.push(`  Idle timeout: ${config.idle_timeout || 300000}ms`);
+  lines.push(`  Idle timeout: ${config.idle_timeout || DEFAULT_IDLE_TIMEOUT}ms`);
   lines.push("");
 
   // Runtime info if running

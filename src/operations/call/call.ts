@@ -6,6 +6,9 @@ import type { McpmContext, OperationResult, McpmParams } from "../types.js";
 import { executeHooks } from "../../hooks.js";
 import { processBinaryContent } from "../../binary-filter.js";
 
+// Track blueprint-extra enabled state to avoid status call per browser_* tool
+let blueprintEnabled = false;
+
 export async function call(ctx: McpmContext, params: McpmParams): Promise<OperationResult> {
   const serverName = params.server;
   const toolName = params.tool;
@@ -43,8 +46,6 @@ export async function call(ctx: McpmContext, params: McpmParams): Promise<Operat
     };
   }
 
-  const argsStr = JSON.stringify(args).slice(0, 200);
-
   // Auto-start server if not running but exists in registry
   if (!(serverName in ctx.RUNNING)) {
     if (serverName in ctx.SERVERS && ctx.SERVERS[serverName].enabled !== false) {
@@ -71,32 +72,37 @@ export async function call(ctx: McpmContext, params: McpmParams): Promise<Operat
       ctx.log(`CALL ${serverName}:enable -> auto-injected client_id="${clientId}"`);
     }
 
-    // Auto-enable when calling browser_* tools (blueprint requires enable first)
-    if (toolName.startsWith("browser_") || toolName === "disable" || toolName === "status") {
-      // Check if blueprint needs enabling by calling status
-      try {
-        const reqTimeout = ctx.SERVERS[serverName]?.timeout || 60000;
-        const statusResult = await ctx.callServerTool(reqTimeout, ctx.RUNNING[serverName], "status", {});
-        const statusText = statusResult?.content?.[0]?.text || JSON.stringify(statusResult);
-        const isPassive = statusText.includes('"passive"') || statusText.includes("Passive") || statusText.includes("not_enabled");
+    // Track enable/disable state transitions
+    if (toolName === "enable") {
+      blueprintEnabled = true;
+    } else if (toolName === "disable") {
+      blueprintEnabled = false;
+    }
 
-        if (isPassive && toolName !== "status" && toolName !== "disable") {
-          ctx.log(`CALL ${serverName}:${toolName} -> blueprint is passive, auto-enabling...`);
-          const enableResult = await ctx.callServerTool(reqTimeout, ctx.RUNNING[serverName], "enable", { client_id: clientId });
-          const enableText = enableResult?.content?.[0]?.text || JSON.stringify(enableResult);
-          const enableFailed = enableText.includes("isError") || enableText.includes("❌");
-          if (enableFailed) {
-            ctx.log(`CALL ${serverName}:${toolName} -> auto-enable failed`);
-            return { content: [{ type: "text", text: `Auto-enable failed for blueprint-extra:\n${enableText}\n\nFix the connection issue, then retry your ${toolName} call.` }] };
-          }
-          ctx.log(`CALL ${serverName}:${toolName} -> auto-enable succeeded, proceeding with original call`);
-          // Update activity timestamp after enable
-          ctx.RUNNING[serverName].lastActivity = Date.now();
+    // Auto-enable when calling browser_* tools and blueprint isn't enabled
+    if (toolName.startsWith("browser_") && !blueprintEnabled) {
+      ctx.log(`CALL ${serverName}:${toolName} -> blueprint not enabled, auto-enabling...`);
+      const reqTimeout = ctx.SERVERS[serverName]?.timeout || 60000;
+      try {
+        const enableResult = await ctx.callServerTool(reqTimeout, ctx.RUNNING[serverName], "enable", { client_id: clientId });
+        const enableText = enableResult?.content?.[0]?.text || JSON.stringify(enableResult);
+        if (enableText.includes("isError") || enableText.includes("❌")) {
+          ctx.log(`CALL ${serverName}:${toolName} -> auto-enable failed`);
+          blueprintEnabled = false;
+          return { content: [{ type: "text", text: `Auto-enable failed for blueprint-extra:\n${enableText}\n\nFix the connection issue, then retry your ${toolName} call.` }] };
         }
+        blueprintEnabled = true;
+        ctx.RUNNING[serverName].lastActivity = Date.now();
+        ctx.log(`CALL ${serverName}:${toolName} -> auto-enable succeeded`);
       } catch (e: any) {
-        ctx.log(`CALL ${serverName}:${toolName} -> status check failed: ${e.message}, proceeding anyway`);
+        ctx.log(`CALL ${serverName}:${toolName} -> auto-enable error: ${e.message}, proceeding anyway`);
       }
     }
+  }
+
+  // Reset blueprint state if server stopped/restarted
+  if (serverName === "blueprint-extra" && !(serverName in ctx.RUNNING)) {
+    blueprintEnabled = false;
   }
 
   // Validate required params for non-blueprint servers (blueprint is handled above)
@@ -119,7 +125,9 @@ export async function call(ctx: McpmContext, params: McpmParams): Promise<Operat
     }
   }
 
-  ctx.log(`CALL ${serverName}:${toolName} args=${argsStr}`);
+  // Log args after middleware (so auto-injected params show up)
+  const finalArgsStr = JSON.stringify(args).slice(0, 200);
+  ctx.log(`CALL ${serverName}:${toolName} args=${finalArgsStr}`);
   const startTime = Date.now();
 
   // Update last activity timestamp

@@ -4,8 +4,8 @@
 
 import { existsSync, readdirSync, readFileSync } from "fs";
 import { join } from "path";
-import { execSync } from "child_process";
 import type { McpmContext, OperationResult } from "../types.js";
+import { getProcessMemoryMB, formatBytes } from "../../utils.js";
 
 function scanProjectUsage(ctx: McpmContext): Record<string, string[]> {
   const usage: Record<string, string[]> = {};
@@ -125,34 +125,6 @@ export async function usage(ctx: McpmContext): Promise<OperationResult> {
   lines.push(`Total: ${allServers.length} servers, ${used.length} in use, ${unused.length} not used`);
 
   return { content: [{ type: "text", text: lines.join("\n") }] };
-}
-
-function getProcessMemoryMB(pid: number): number | null {
-  try {
-    if (process.platform === "win32") {
-      const output = execSync(
-        `wmic process where ProcessId=${pid} get WorkingSetSize 2>nul`,
-        { encoding: "utf-8", timeout: 5000 }
-      ).trim();
-      const match = output.match(/\d+/);
-      if (!match) return null;
-      return Math.round(parseInt(match[0], 10) / 1024 / 1024);
-    } else {
-      const output = execSync(`ps -o rss= -p ${pid}`, {
-        encoding: "utf-8",
-        timeout: 5000,
-      }).trim();
-      return Math.round(parseInt(output, 10) / 1024);
-    }
-  } catch {
-    return null;
-  }
-}
-
-function formatBytes(mb: number | null): string {
-  if (mb === null) return "?";
-  if (mb >= 1024) return `${(mb / 1024).toFixed(1)}GB`;
-  return `${mb}MB`;
 }
 
 export async function ram(ctx: McpmContext): Promise<OperationResult> {

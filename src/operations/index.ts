@@ -21,5 +21,4 @@ export { usage, ram } from "./admin/usage.js";
 // Types
 export type { McpmContext, McpmParams, OperationResult } from "./types.js";
 
-// Organization operations
-export { organize } from "./organize/index.js";
+// Organization operations (archived to src/archive/organize.ts)

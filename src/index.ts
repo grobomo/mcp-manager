@@ -52,8 +52,9 @@ function log(message: string): void {
 
 // ============ Idle Server Management ============
 
+import { DEFAULT_IDLE_TIMEOUT } from "./utils.js";
+
 const IDLE_CHECK_INTERVAL = 60000;
-const DEFAULT_IDLE_TIMEOUT = 3600000;
 
 let idleCheckTimer: NodeJS.Timeout | null = null;
 
@@ -619,6 +620,19 @@ server.tool(
 );
 
 // ============ Main ============
+
+// Kill child processes on exit to prevent orphans
+function cleanup(): void {
+  for (const [name, server] of Object.entries(RUNNING)) {
+    if (server.process) {
+      try { server.process.kill(); } catch {}
+    }
+  }
+  if (idleCheckTimer) clearInterval(idleCheckTimer);
+}
+process.on("exit", cleanup);
+process.on("SIGTERM", () => { cleanup(); process.exit(0); });
+process.on("SIGINT", () => { cleanup(); process.exit(0); });
 
 async function main() {
   log("=== MCP Manager v2.0 starting ===");

@@ -2,10 +2,10 @@
   "name": "mcp-manager",
   "version": "1.0.0",
   "description": "Dynamic MCP Server Proxy Router",
-  "main": "dist/index.js",
+  "main": "build/index.js",
   "scripts": {
     "build": "tsup src/index.ts --format esm --target node20 --clean --out-dir build",
-    "start": "node dist/index.js"
+    "start": "node build/index.js"
   },
   "keywords": [
     "mcp",
