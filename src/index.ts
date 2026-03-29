@@ -19,7 +19,7 @@ import { loadHooks, executeHooks } from "./hooks.js";
 
 // Operations
 import * as ops from "./operations/index.js";
-import type { McpmContext, McpmParams, ServerConfig, RunningServer, Tool, CachedServer } from "./operations/types.js";
+import type { McpmContext, McpmParams, ServerConfig, RunningServer, Tool, CachedServer, PendingRequest } from "./operations/types.js";
 
 // ============ State ============
 
