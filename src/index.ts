@@ -496,29 +496,9 @@ function stopServer(name: string): [boolean, string] {
   if (!(name in RUNNING)) return [false, `Server not running: ${name}`];
   try {
     const server = RUNNING[name];
-    // Clean up persistent readline and reject pending requests
-    if (server.readline) {
-      server.readline.close();
-      server.readline = undefined;
-    }
-    if (server.pendingRequests) {
-      for (const [, pending] of server.pendingRequests) {
-        clearTimeout(pending.timeoutId);
-        pending.reject(new Error("Server stopped"));
-      }
-      server.pendingRequests.clear();
-      server.pendingRequests = undefined;
-    }
-    if (server.process) server.process.kill();
-    if (name in TOOLS) {
-      for (const tool of TOOLS[name]) {
-        delete TOOL_MAP[`${name}:${tool.name}`];
-        if (TOOL_MAP[tool.name] === name) delete TOOL_MAP[tool.name];
-      }
-      delete TOOLS[name];
-    }
-    delete RUNNING[name];
     const transport = server.url ? "HTTP" : "stdio";
+    if (server.process) server.process.kill();
+    cleanupServer(name, "Server stopped");
     return [true, `Stopped ${name} (${transport})`];
   } catch (e: any) {
     return [false, `Failed to stop ${name}: ${e.message}`];
