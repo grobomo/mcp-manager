@@ -191,10 +191,10 @@ function loadServersConfig(): number {
 function saveServersConfig(): void {
   const data: any = {
     servers: {},
-    defaults: { timeout: 30, retry_count: 3, health_check_interval: 60 },
   };
   for (const [name, config] of Object.entries(SERVERS)) {
-    const { name: _, timeout, retry_count, health_check_interval, ...cleanConfig } = config as any;
+    // Only strip the 'name' field (redundant with the YAML key)
+    const { name: _, ...cleanConfig } = config as any;
     data.servers[name] = cleanConfig;
   }
   writeFileSync(SERVERS_FILE, stringifyYaml(data));
