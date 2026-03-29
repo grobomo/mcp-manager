@@ -1,23 +1,26 @@
-# mcp-manager Code Review & Optimization
+# mcp-manager
 
-## Context
-Full code review identified issues during blueprint-extra client_id debugging session (2026-03-28).
+## Status: All review tasks complete. Project is clean, built, pushed.
 
-## Completed
-- [x] Blueprint auto-enable middleware (call.ts) — committed 4050e4d
-- [x] Blueprint CLAUDE.md workflow docs — committed e250e4e
-- [x] PreToolUse enforcement hook (git + TODO.md checks)
-- [x] Hook module system (sm-stop.js, sm-pretooluse.js runners)
-- [x] Updated hook-manager and super-manager SKILL.md to match reality
-- [x] Fix `package.json` main/start: `dist/` -> `build/`
-- [x] Fix `DEFAULT_IDLE_TIMEOUT` inconsistency: single source of truth in utils.ts (3600000ms)
-- [x] Extract shared `getProcessMemoryMB` + `formatBytes` to utils.ts
-- [x] Import shared functions in status.ts and usage.ts
-- [x] Import shared constant in details.ts and index.ts
-- [x] Add process cleanup handler (kill child processes on exit)
-- [x] Remove hardcoded "joel" maintainer in registry.ts discover
-- [x] Archive dead code: logging.ts -> src/archive/logging.ts
-- [x] Archive dead code: organize/index.ts -> src/archive/organize.ts
-- [x] Remove organize export from operations/index.ts
-- [x] Track blueprint enabled state in memory (no status call per browser_* tool)
-- [x] Move argsStr computation after middleware (correct logging)
+## Completed (2026-03-28)
+- [x] Blueprint auto-enable middleware (auto-inject client_id, auto-enable on browser_* calls)
+- [x] Required param validation for non-blueprint servers
+- [x] Blueprint CLAUDE.md workflow docs
+- [x] Fix package.json paths (dist/ -> build/)
+- [x] Fix DEFAULT_IDLE_TIMEOUT inconsistency (single source in utils.ts)
+- [x] Extract shared getProcessMemoryMB + formatBytes to utils.ts
+- [x] Process exit cleanup handler
+- [x] Remove PII from registry.ts discover
+- [x] Archive dead code (logging.ts, organize/)
+- [x] Track blueprint state in memory (no extra status call)
+- [x] Fix argsStr logging after middleware
+
+## Related projects shipped same session
+- grobomo/hook-runner — modular hook system replacing hook-manager
+- grobomo/context-reset — Python wrapper for Claude context reset (TODO items remain there)
+- blueprint-extra-mcp CLAUDE.md — full workflow documentation
+
+## Next session ideas (step 4: expand)
+- [ ] Add more server-specific middleware in call.ts (like blueprint's, but for other servers that need special handling)
+- [ ] Write tests for call.ts middleware
+- [ ] context-reset: test the wrapper, wire as callable tool
