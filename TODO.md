@@ -1,6 +1,12 @@
 # mcp-manager
 
-## Status: All tasks complete. 72 tests passing.
+## Status: In progress — cleanup and hardening pass
+
+## Current tasks
+- [ ] Extract duplicated server cleanup into `cleanupServer()` helper (DRY — used in 3 places)
+- [ ] Fix HTTP health check: reject pending requests before removing server
+- [ ] Remove unused imports (ChildProcess, readdirSync) — DONE
+- [ ] Push all changes
 
 ## Completed this session (2026-03-28)
 - [x] Fix stdio transport concurrency bug — persistent readline per server with request ID dispatch
