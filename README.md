@@ -228,13 +228,13 @@ args:
 
 ## Auto-Stop Idle Servers
 
-Servers automatically stop after 5 minutes of inactivity to save memory.
+Servers automatically stop after 1 hour of inactivity to save memory. Health checks run every 60 seconds to detect crashed processes and unreachable HTTP servers.
 
 **Configuration:**
 
 ```yaml
 defaults:
-  idle_timeout: 300000   # 5 minutes (default for all servers)
+  idle_timeout: 3600000   # 1 hour (default for all servers)
 
 servers:
   wiki-lite:
