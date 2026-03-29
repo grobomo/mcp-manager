@@ -1,15 +1,15 @@
 # mcp-manager
 
-## Current tasks (2026-03-28)
+## Status: All tasks complete. 72 tests passing.
 
-- [x] Fix stdio transport concurrency bug — sendRequest creates a new readline per call, racing on stdout
-- [x] Add persistent per-server readline with request ID dispatch
-- [x] Clean up readline and pending requests on server stop
-- [x] Add test coverage for utils.ts (sanitizeLog, validatePath, formatBytes)
-- [x] Add test coverage for lifecycle operations (start, stop, restart, enable)
-- [ ] Add test coverage for hooks.ts (pattern matching, extraction)
-- [ ] Add test coverage for search operation
-- [ ] Add HTTP server health check in idle checker
+## Completed this session (2026-03-28)
+- [x] Fix stdio transport concurrency bug — persistent readline per server with request ID dispatch
+- [x] Clean up readline and pending requests on server stop and crash detection
+- [x] Add test coverage for utils.ts (sanitizeLog, validatePath, formatBytes) — 17 tests
+- [x] Add test coverage for hooks.ts (pattern matching, extraction) — 11 tests
+- [x] Add test coverage for search operation — 11 tests
+- [x] Add lifecycle operation tests (start/stop/restart/enable) — 13 tests
+- [x] Add HTTP server health check in idle checker
 
 ## All completed (2026-03-28)
 - [x] Blueprint auto-enable middleware
