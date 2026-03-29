@@ -5,7 +5,8 @@
   "main": "build/index.js",
   "scripts": {
     "build": "tsup src/index.ts --format esm --target node20 --clean --out-dir build",
-    "start": "node build/index.js"
+    "start": "node build/index.js",
+    "test": "npx tsx --test tests/*.test.ts"
   },
   "keywords": [
     "mcp",

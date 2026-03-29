@@ -3,15 +3,13 @@
 ## Status: Review complete. Next: step 3 (optimize/harden) and step 4 (expand).
 
 ## In Progress
-- [ ] Write tests for call.ts blueprint middleware (auto-inject client_id, auto-enable, param validation)
-- [ ] Add .github/workflows/secret-scan.yml (required by push workflow rules)
-- [ ] Verify hook-runner enforcement-gate works with mcp-manager (test Edit on dirty tree)
-
-## Next (step 4: expand)
 - [ ] Add server-specific middleware pattern in call.ts for other servers needing special handling
 - [ ] context-reset: test wrapper, wire as callable tool from stop hook
 
 ## Completed (2026-03-28)
+- [x] Write tests for call.ts blueprint middleware (21 tests, all passing)
+- [x] Add .github/workflows/secret-scan.yml (already existed)
+- [x] Verify hook-runner enforcement-gate works with mcp-manager (module installed, all checks pass)
 - [x] Blueprint auto-enable middleware (auto-inject client_id, auto-enable on browser_* calls)
 - [x] Required param validation for non-blueprint servers
 - [x] Blueprint CLAUDE.md workflow docs
