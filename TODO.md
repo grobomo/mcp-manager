@@ -1,6 +1,9 @@
 # mcp-manager
 
-## Status: All tasks complete. 72 tests passing. CI green. Pushed.
+## Current tasks
+- [ ] Fix README.md: idle timeout says 5min, actual default is 1hr
+- [ ] Fix README.md: remove undocumented `keywords` server option
+- [ ] Add new features to README: health checks, metrics, concurrency-safe stdio
 
 ## Completed (2026-03-29)
 - [x] Extract duplicated server cleanup into `cleanupServer()` helper (DRY — was in 3 places)
