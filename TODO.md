@@ -1,6 +1,12 @@
 # mcp-manager
 
-## Status: All tasks complete. 93 tests passing. CI green.
+## Status: All tasks complete. 93 tests passing. CI green. README fully documented.
+
+## Future Ideas (not urgent)
+- [ ] Add metrics persistence: write metrics to file on exit, reload on start (currently in-memory only)
+- [ ] Add `mcpm(operation="logs", server="name")` to tail recent log entries per server
+- [ ] Test coverage for registry.ts (add/remove/discover) — currently untested
+- [ ] Consider extracting startServer/sendRequest from index.ts into transport.ts (~200 lines)
 
 ## Completed (2026-03-29, session 3)
 - [x] Fix saveServersConfig bug: was stripping timeout/idle_timeout from per-server configs + writing bogus defaults
