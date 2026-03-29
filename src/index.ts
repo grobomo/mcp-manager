@@ -255,20 +255,21 @@ async function sendRequest(
     }
   }
 
-  // Stdio transport
-  return new Promise((resolve, reject) => {
-    const { stdin, stdout } = server.process!;
-    if (!stdin || !stdout) {
-      reject(new Error("Process streams not available"));
-      return;
-    }
-    const rl = createInterface({ input: stdout });
-    const timeoutId = setTimeout(() => {
-      rl.close();
-      reject(new Error("Request timeout"));
-    }, timeout);
+  // Stdio transport — use persistent readline per server
+  const { stdin } = server.process!;
+  if (!stdin) {
+    throw new Error("Process stdin not available");
+  }
 
-    const handleLine = (line: string) => {
+  // Initialize persistent readline on first request
+  if (!server.readline) {
+    const { stdout } = server.process!;
+    if (!stdout) throw new Error("Process stdout not available");
+
+    server.pendingRequests = new Map();
+    server.readline = createInterface({ input: stdout });
+
+    server.readline.on("line", (line: string) => {
       if (!line.trim()) return;
       if (!line.startsWith("{")) {
         log(`  [stdout] ${line}`);
@@ -280,24 +281,33 @@ async function sendRequest(
       }
       try {
         const response = JSON.parse(line);
-        if (response.id !== requestId) return;
-        clearTimeout(timeoutId);
-        rl.removeListener("line", handleLine);
-        rl.close();
+        if (response.id == null) return;
+        const pending = server.pendingRequests?.get(response.id);
+        if (!pending) return;
+        server.pendingRequests!.delete(response.id);
+        clearTimeout(pending.timeoutId);
         if (response.error) {
-          reject(new Error(response.error.message || JSON.stringify(response.error)));
+          pending.reject(new Error(response.error.message || JSON.stringify(response.error)));
         } else {
-          resolve(response.result);
+          pending.resolve(response.result);
         }
       } catch {}
-    };
-    rl.on("line", handleLine);
+    });
+  }
+
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      server.pendingRequests?.delete(requestId);
+      reject(new Error("Request timeout"));
+    }, timeout);
+
+    server.pendingRequests!.set(requestId, { resolve, reject, timeoutId });
+
     try {
       stdin.write(JSON.stringify(request) + "\n");
     } catch (e: any) {
       clearTimeout(timeoutId);
-      rl.removeListener("line", handleLine);
-      rl.close();
+      server.pendingRequests?.delete(requestId);
       reject(new Error(`Failed to write to server stdin: ${e.message}`));
     }
   });
