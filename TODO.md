@@ -1,22 +1,8 @@
 # mcp-manager
 
-## Status: All tasks complete. CI green. Project stable and production-ready.
+## Status: All review tasks complete. Project stable. context-reset shipped.
 
-## Completed (session 2, 2026-03-28)
-- [x] Add middleware tests to CI (GitHub Actions test + secret-scan)
-- [x] Fix CI: secret-scan.yml self-matching its own regex patterns
-- [x] Server health check: detect crashed stdio processes, auto-restart if auto_start
-- [x] Metrics: per-server call counts, errors, avg/max latency (in status output)
-- [x] Harden stdio transport: catch stdin.write errors on dead processes
-
-## Completed (2026-03-28)
-- [x] DRY: add MCP_ROOT to McpmContext, eliminate 4 duplicate computations
-- [x] DRY: import BASE_DIR from utils.ts, fix CJS require in ESM, remove stale TODO
-- [x] Refactor call.ts: extract server middleware into pluggable middleware.ts
-- [x] context-reset: tested (dry-run works), already wired in stop hook auto-continue.js
-- [x] Write tests for call.ts blueprint middleware (20 tests, all passing)
-- [x] Add .github/workflows/secret-scan.yml (already existed)
-- [x] Verify hook-runner enforcement-gate works with mcp-manager
+## Completed (2026-03-28, session 1+2)
 - [x] Blueprint auto-enable middleware (auto-inject client_id, auto-enable on browser_* calls)
 - [x] Required param validation for non-blueprint servers
 - [x] Blueprint CLAUDE.md workflow docs
@@ -28,6 +14,13 @@
 - [x] Archive dead code (logging.ts, organize/)
 - [x] Track blueprint state in memory
 - [x] Fix argsStr logging after middleware
-- [x] hook-runner system (grobomo/hook-runner) — replaces hook-manager
-- [x] context-reset project (grobomo/context-reset) — initial wrapper built
-- [x] Jsonl transcript scanning for incomplete tangents — no tangents found
+- [x] Middleware refactored to pluggable middleware.ts (done by session 2)
+- [x] Metrics: per-server call counts, errors, latency (done by session 2)
+- [x] Server health check with auto-restart (done by session 2)
+- [x] Tests (20 passing, done by session 2)
+- [x] CI: GitHub Actions test + secret-scan
+
+## Related projects shipped
+- grobomo/hook-runner — modular hook system (PreToolUse, PostToolUse, Stop)
+- grobomo/context-reset — autonomous context reset via wt new-tab
+- blueprint-extra-mcp CLAUDE.md — full workflow documentation
