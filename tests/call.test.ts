@@ -12,8 +12,9 @@ import type { McpmContext, McpmParams, RunningServer, ServerConfig, Tool } from 
 // We need to re-import call for each test group to reset module-level blueprintEnabled state.
 // Since it's a module-level let, we isolate via a factory that creates fresh contexts.
 
-// Dynamically import call (ESM)
+// Dynamically import call and middleware reset (ESM)
 const { call } = await import("../src/operations/call/call.js");
+const { resetBlueprintState } = await import("../src/operations/call/middleware.js");
 
 // ============ Test Helpers ============
 
@@ -182,15 +183,8 @@ describe("call: blueprint auto-inject client_id", () => {
 });
 
 describe("call: blueprint auto-enable", () => {
-  // Reset module-level blueprintEnabled state by calling disable
-  it("(setup) reset blueprint state", async () => {
-    const ctx = makeContext({
-      callServerTool: async () => ({ content: [{ type: "text", text: "ok" }] }),
-    });
-    await call(ctx, makeParams({ server: "blueprint-extra", tool: "disable", arguments: {} }));
-  });
-
   it("auto-enables blueprint before browser_* calls", async () => {
+    resetBlueprintState();
     const toolsCalled: string[] = [];
     const ctx = makeContext({
       callServerTool: async (_t, _s, tool, _args) => {
@@ -228,12 +222,7 @@ describe("call: blueprint auto-enable", () => {
   });
 
   it("returns error and resets state when auto-enable fails", async () => {
-    // Reset blueprintEnabled from previous test
-    const resetCtx = makeContext({
-      callServerTool: async () => ({ content: [{ type: "text", text: "ok" }] }),
-    });
-    await call(resetCtx, makeParams({ server: "blueprint-extra", tool: "disable", arguments: {} }));
-
+    resetBlueprintState();
     let callCount = 0;
     const ctx = makeContext({
       callServerTool: async (_t, _s, tool, _args) => {

@@ -5,9 +5,7 @@
 import type { McpmContext, OperationResult, McpmParams } from "../types.js";
 import { executeHooks } from "../../hooks.js";
 import { processBinaryContent } from "../../binary-filter.js";
-
-// Track blueprint-extra enabled state to avoid status call per browser_* tool
-let blueprintEnabled = false;
+import { runMiddleware, hasMiddleware } from "./middleware.js";
 
 export async function call(ctx: McpmContext, params: McpmParams): Promise<OperationResult> {
   const serverName = params.server;
@@ -62,51 +60,13 @@ export async function call(ctx: McpmContext, params: McpmParams): Promise<Operat
     }
   }
 
-  // Blueprint-extra middleware: auto-inject client_id and auto-enable
-  if (serverName === "blueprint-extra") {
-    const clientId = ctx.projectName || "claude-code";
+  // Run server-specific middleware (blueprint auto-enable, etc.)
+  const mwResult = await runMiddleware(serverName, ctx, toolName, args);
+  if (mwResult.error) return mwResult.error;
+  args = mwResult.args;
 
-    // Auto-inject client_id for enable tool
-    if (toolName === "enable" && !args.client_id) {
-      args.client_id = clientId;
-      ctx.log(`CALL ${serverName}:enable -> auto-injected client_id="${clientId}"`);
-    }
-
-    // Track enable/disable state transitions
-    if (toolName === "enable") {
-      blueprintEnabled = true;
-    } else if (toolName === "disable") {
-      blueprintEnabled = false;
-    }
-
-    // Auto-enable when calling browser_* tools and blueprint isn't enabled
-    if (toolName.startsWith("browser_") && !blueprintEnabled) {
-      ctx.log(`CALL ${serverName}:${toolName} -> blueprint not enabled, auto-enabling...`);
-      const reqTimeout = ctx.SERVERS[serverName]?.timeout || 60000;
-      try {
-        const enableResult = await ctx.callServerTool(reqTimeout, ctx.RUNNING[serverName], "enable", { client_id: clientId });
-        const enableText = enableResult?.content?.[0]?.text || JSON.stringify(enableResult);
-        if (enableText.includes("isError") || enableText.includes("❌")) {
-          ctx.log(`CALL ${serverName}:${toolName} -> auto-enable failed`);
-          blueprintEnabled = false;
-          return { content: [{ type: "text", text: `Auto-enable failed for blueprint-extra:\n${enableText}\n\nFix the connection issue, then retry your ${toolName} call.` }] };
-        }
-        blueprintEnabled = true;
-        ctx.RUNNING[serverName].lastActivity = Date.now();
-        ctx.log(`CALL ${serverName}:${toolName} -> auto-enable succeeded`);
-      } catch (e: any) {
-        ctx.log(`CALL ${serverName}:${toolName} -> auto-enable error: ${e.message}, proceeding anyway`);
-      }
-    }
-  }
-
-  // Reset blueprint state if server stopped/restarted
-  if (serverName === "blueprint-extra" && !(serverName in ctx.RUNNING)) {
-    blueprintEnabled = false;
-  }
-
-  // Validate required params for non-blueprint servers (blueprint is handled above)
-  if (serverName !== "blueprint-extra") {
+  // Validate required params for servers without custom middleware
+  if (!hasMiddleware(serverName)) {
     const serverTools = ctx.TOOLS[serverName] || [];
     const toolDef = serverTools.find(t => t.name === toolName);
     if (toolDef?.inputSchema) {
