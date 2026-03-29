@@ -6,7 +6,7 @@
 - [x] Add middleware tests to CI (GitHub Actions test job)
 - [x] Server health check: detect crashed stdio processes, auto-restart if auto_start
 - [x] Metrics: per-server call counts, errors, avg/max latency (in status output)
-- [ ] Tool response caching for idempotent queries (reduce backend load)
+- [x] Harden stdio transport: catch stdin.write errors on dead processes
 
 ## Completed (2026-03-28)
 - [x] DRY: add MCP_ROOT to McpmContext, eliminate 4 duplicate computations

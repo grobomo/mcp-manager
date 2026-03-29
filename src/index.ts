@@ -292,7 +292,14 @@ async function sendRequest(
       } catch {}
     };
     rl.on("line", handleLine);
-    stdin.write(JSON.stringify(request) + "\n");
+    try {
+      stdin.write(JSON.stringify(request) + "\n");
+    } catch (e: any) {
+      clearTimeout(timeoutId);
+      rl.removeListener("line", handleLine);
+      rl.close();
+      reject(new Error(`Failed to write to server stdin: ${e.message}`));
+    }
   });
 }
 
