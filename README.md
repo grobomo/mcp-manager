@@ -30,10 +30,15 @@ That's it. Setup builds the project, creates `servers.yaml`, configures `.mcp.js
 - **Single Tool Interface** - One `mcpm` tool with operations (token-efficient: ~300 tokens vs ~3000)
 - **Dynamic Loading** - Start/stop MCP servers on demand without restarting Claude
 - **On-Demand Start** - Servers start automatically when tools are called
+- **Crash Recovery** - Auto-restarts crashed servers and retries failed calls once
 - **Auto-Stop** - Idle servers stop after 1 hour to save memory (configurable)
 - **Health Checks** - Detects crashed stdio processes and unreachable HTTP servers, auto-restarts
 - **Call Metrics** - Per-server call counts, errors, and latency tracking
+- **Binary Filtering** - Intercepts base64 images/resources, saves to temp files, returns paths
+- **Blueprint Middleware** - Auto-enables browser automation with client_id injection
 - **Capabilities Caching** - See available tools even when servers are stopped
+- **Hooks System** - Trigger actions after tool calls via hooks.yaml config
+- **Per-Project Filtering** - Restrict server access per project via `.mcp.json` allowedServers
 - **Cross-Platform** - Works on Windows, macOS, and Linux
 
 ## How It Works
@@ -188,11 +193,6 @@ servers:
     url: https://api.example.com/mcp
     enabled: true
     auto_start: false
-
-defaults:
-  timeout: 30
-  retry_count: 3
-  health_check_interval: 60
 ```
 
 ### Server Options
@@ -208,6 +208,7 @@ defaults:
 | `idle_timeout` | int | 3600000 | Auto-stop after idle (ms, default 1 hour) |
 | `startup_delay` | int | 2000 | Wait before initializing (ms) |
 | `env` | dict | {} | Environment variables |
+| `timeout` | int | 60000 | Request timeout (ms) |
 | `tags` | list | [] | Categorization tags (use `no_auto_stop` to exempt from idle timeout) |
 
 ### Path Conventions
@@ -226,30 +227,109 @@ args:
 
 ---
 
-## Auto-Stop Idle Servers
+## Reliability
+
+### Auto-Stop Idle Servers
 
 Servers automatically stop after 1 hour of inactivity to save memory. Health checks run every 60 seconds to detect crashed processes and unreachable HTTP servers.
 
-**Configuration:**
-
 ```yaml
-defaults:
-  idle_timeout: 3600000   # 1 hour (default for all servers)
-
 servers:
   wiki-lite:
-    idle_timeout: 600000   # 10 minutes for this server
+    idle_timeout: 600000   # 10 minutes (default: 3600000 = 1 hour)
     tags:
       - no_auto_stop       # Never auto-stop this server
 ```
 
-**Check status:**
+### Crash Recovery
+
+If a tool call fails due to a server crash (stdin write failure, EPIPE, stream errors), mcp-manager automatically:
+
+1. Stops the dead server
+2. Restarts it
+3. Retries the call once
+
+No configuration needed - this is always active for enabled servers.
+
+### Health Checks
+
+Every 60 seconds, mcp-manager checks all running servers:
+
+- **Stdio servers** - Detects exited processes, cleans up resources, auto-restarts if `auto_start: true`
+- **HTTP servers** - Sends a ping request, removes unreachable servers, auto-restarts if configured
+
+Check server health with:
 
 ```
 mcpm(operation="status")
 ```
 
-Shows idle time and countdown for each running server.
+---
+
+## Hooks
+
+Hooks trigger actions after tool calls. Configure in `hooks.yaml`:
+
+```yaml
+defaults:
+  enabled: true
+  async: true
+  timeout: 5000
+
+hooks:
+  # Pattern matches tool names (* = wildcard, prefix* = prefix match)
+  browser_navigate:
+    target_server: metrics-server
+    target_tool: log_event
+    result_contains: "success"      # Only trigger if result contains this
+    extract:
+      url: args.url                 # Extract from call arguments
+      status: "regex:HTTP (\\d+)"   # Extract from result via regex
+      source: "literal:${server}"   # Variable substitution
+      summary: "result_summary:100" # First 100 chars of result
+```
+
+### Extract Specs
+
+| Spec | Description | Example |
+|------|-------------|---------|
+| `args.<field>` | Value from call arguments | `args.query` |
+| `regex:<pattern>` | Capture group 1 from result | `regex:id=(\\d+)` |
+| `literal:<value>` | Literal with `${server}`, `${tool}` substitution | `literal:${server}` |
+| `result_summary:<n>` | First N chars of result | `result_summary:200` |
+| `result` | Full result text | `result` |
+
+---
+
+## Blueprint Middleware
+
+Browser automation via `blueprint-extra` has built-in middleware:
+
+- **Auto-inject `client_id`** on `enable` calls (uses project name or `claude-code`)
+- **Auto-enable** when calling `browser_*` tools if blueprint isn't enabled yet
+- **State tracking** across enable/disable calls
+
+No configuration needed - active whenever `blueprint-extra` is registered in `servers.yaml`.
+
+---
+
+## Per-Project Filtering
+
+Restrict which servers a project can access via `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "mcp-manager": {
+      "command": "node",
+      "args": ["path/to/mcp-manager/build/index.js"],
+      "allowedServers": ["wiki-lite", "v1-lite"]
+    }
+  }
+}
+```
+
+When `allowedServers` is set, only those servers appear in `list_servers` and can be called. Other servers are blocked with a clear error message.
 
 ---
 
@@ -257,18 +337,23 @@ Shows idle time and countdown for each running server.
 
 ```
 mcp-manager/
-|-- src/                    # TypeScript source
-|   |-- index.ts            # Main server entry point
-|   |-- operations/         # Operation handlers
+|-- src/
+|   |-- index.ts            # Main server, transport, idle checker, config
+|   |-- utils.ts            # Shared utilities (sanitizeLog, paths, memory)
+|   |-- hooks.ts            # Post-call hook system
+|   |-- metrics.ts          # Per-server call metrics
+|   |-- binary-filter.ts    # Base64 image/resource interception
+|   |-- operations/
+|       |-- types.ts        # Shared types (ServerConfig, RunningServer, etc.)
+|       |-- index.ts        # Operation barrel exports
 |       |-- query/          # list_servers, search, details, tools, status, help
-|       |-- call/           # call (proxy to backend)
-|       |-- admin/          # start, stop, enable, add, remove, reload, discover
-|-- build/                  # Compiled JavaScript
-|-- managed-servers/        # Bundled MCP servers (optional)
-|-- servers.yaml            # Server registry
+|       |-- call/           # call + middleware (blueprint auto-enable)
+|       |-- admin/          # lifecycle, registry (add/remove/discover), usage/ram
+|-- tests/                  # 93 tests (node:test + tsx)
+|-- build/                  # Compiled JavaScript (tsup ESM)
+|-- servers.yaml            # Server registry (gitignored)
+|-- hooks.yaml              # Hook config (gitignored)
 |-- setup.py                # Installation script
-|-- package.json            # Node.js dependencies
-|-- README.md               # This file
 ```
 
 ---
