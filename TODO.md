@@ -1,6 +1,10 @@
 # mcp-manager
 
-## Status: All tasks complete. 87 tests passing. CI green.
+## Status: Expanding — reliability and version alignment
+
+## In Progress (2026-03-29, session 3 continued)
+- [ ] Bump package.json version to 2.0.0 (matches code, 54 commits of changes)
+- [ ] Add call retry on server crash: if tool call fails, auto-restart server and retry once
 
 ## Completed (2026-03-29, session 3)
 - [x] Fix saveServersConfig bug: was stripping timeout/idle_timeout from per-server configs + writing bogus defaults
