@@ -8,6 +8,15 @@ import { processBinaryContent } from "../../binary-filter.js";
 import { runMiddleware, hasMiddleware } from "./middleware.js";
 import { recordCall } from "../../metrics.js";
 
+/** Process raw result content: filter binaries, extract text */
+function extractResultText(rawContent: any, serverName: string): string {
+  const content = processBinaryContent(rawContent, serverName);
+  if (Array.isArray(content)) {
+    return content.filter((c: any) => c.type === "text").map((c: any) => c.text).join("\n");
+  }
+  return JSON.stringify(rawContent, null, 2);
+}
+
 export async function call(ctx: McpmContext, params: McpmParams): Promise<OperationResult> {
   const serverName = params.server;
   const toolName = params.tool;
@@ -98,19 +107,9 @@ export async function call(ctx: McpmContext, params: McpmParams): Promise<Operat
     const reqTimeout = ctx.SERVERS[serverName]?.timeout || 60000;
     const result = await ctx.callServerTool(reqTimeout, ctx.RUNNING[serverName], toolName, args);
     const elapsed = Date.now() - startTime;
-    const rawContent = result?.content;
-    const content = processBinaryContent(rawContent, serverName);
-
-    let resultText: string;
-    if (Array.isArray(content)) {
-      const texts = content.filter((c: any) => c.type === "text").map((c: any) => c.text);
-      resultText = texts.join("\n");
-      const resultPreview = resultText.slice(0, 100).replace(/\n/g, " ");
-      ctx.log(`CALL ${serverName}:${toolName} -> OK (${elapsed}ms) ${resultPreview}...`);
-    } else {
-      resultText = JSON.stringify(result, null, 2);
-      ctx.log(`CALL ${serverName}:${toolName} -> OK (${elapsed}ms)`);
-    }
+    const resultText = extractResultText(result?.content, serverName);
+    const resultPreview = resultText.slice(0, 100).replace(/\n/g, " ");
+    ctx.log(`CALL ${serverName}:${toolName} -> OK (${elapsed}ms) ${resultPreview}...`);
 
     // Record metrics
     recordCall(serverName, elapsed, false);
@@ -141,17 +140,10 @@ export async function call(ctx: McpmContext, params: McpmParams): Promise<Operat
         const retryResult = await ctx.callServerTool(reqTimeout, ctx.RUNNING[serverName], toolName, args);
         const retryElapsed = Date.now() - startTime;
         recordCall(serverName, retryElapsed, false);
-        const rawContent = retryResult?.content;
-        const content = processBinaryContent(rawContent, serverName);
-        let resultText: string;
-        if (Array.isArray(content)) {
-          resultText = content.filter((c: any) => c.type === "text").map((c: any) => c.text).join("\n");
-        } else {
-          resultText = JSON.stringify(retryResult, null, 2);
-        }
+        const retryText = extractResultText(retryResult?.content, serverName);
         ctx.log(`CALL ${serverName}:${toolName} -> RETRY OK (${retryElapsed}ms)`);
-        executeHooks(toolName, args, resultText, serverName, ctx.callServerTool, ctx.RUNNING, ctx.SERVERS, ctx.log);
-        return { content: [{ type: "text", text: resultText }] };
+        executeHooks(toolName, args, retryText, serverName, ctx.callServerTool, ctx.RUNNING, ctx.SERVERS, ctx.log);
+        return { content: [{ type: "text", text: retryText }] };
       } catch (retryErr: any) {
         const retryElapsed = Date.now() - startTime;
         recordCall(serverName, retryElapsed, true);

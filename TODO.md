@@ -1,12 +1,15 @@
 # mcp-manager
 
-## Status: All tasks complete. 93 tests passing. CI green. README fully documented.
+## Status: v2.1.0. All tasks complete. 121 tests passing. CI green. README fully documented.
 
-## Future Ideas (not urgent)
-- [ ] Add metrics persistence: write metrics to file on exit, reload on start (currently in-memory only)
-- [ ] Add `mcpm(operation="logs", server="name")` to tail recent log entries per server
-- [ ] Test coverage for registry.ts (add/remove/discover) — currently untested
-- [ ] Consider extracting startServer/sendRequest from index.ts into transport.ts (~200 lines)
+## Completed (2026-03-29, session 4)
+- [x] Test coverage for registry.ts (add/remove/reload/discover) — 13 tests
+- [x] Metrics persistence: save to metrics.yaml on exit, reload on start — 11 tests
+- [x] Logs operation: `mcpm(operation="logs", server?)` tails recent log entries — 4 tests
+- [x] Extract transport.ts from index.ts: sendRequest, initialize, listTools, callTool (~120 lines)
+- [x] DRY: extract `extractResultText()` in call.ts (was duplicated for normal + retry paths)
+- [x] Clean up unused imports: PendingRequest, sendRequest, executeHooks, createInterface from index.ts
+- [x] Version bump to 2.1.0, README updated with logs operation + metrics persistence
 
 ## Completed (2026-03-29, session 3)
 - [x] Fix saveServersConfig bug: was stripping timeout/idle_timeout from per-server configs + writing bogus defaults

@@ -33,7 +33,7 @@ That's it. Setup builds the project, creates `servers.yaml`, configures `.mcp.js
 - **Crash Recovery** - Auto-restarts crashed servers and retries failed calls once
 - **Auto-Stop** - Idle servers stop after 1 hour to save memory (configurable)
 - **Health Checks** - Detects crashed stdio processes and unreachable HTTP servers, auto-restarts
-- **Call Metrics** - Per-server call counts, errors, and latency tracking
+- **Call Metrics** - Per-server call counts, errors, and latency tracking (persisted across restarts)
 - **Binary Filtering** - Intercepts base64 images/resources, saves to temp files, returns paths
 - **Blueprint Middleware** - Auto-enables browser automation with client_id injection
 - **Capabilities Caching** - See available tools even when servers are stopped
@@ -81,6 +81,7 @@ mcpm(operation="<op>", server="<name>", ...)
 | `details` | Full info on one server | `server` |
 | `tools` | List tools from server(s) | `server` (optional) |
 | `status` | System health, memory, PIDs | - |
+| `logs` | Tail recent log entries | `server` (optional) |
 | `help` | Show available operations | - |
 | `call` | Execute tool on backend server | `server`, `tool`, `arguments` |
 | `start` | Start a server | `server` |

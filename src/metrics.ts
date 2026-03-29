@@ -1,9 +1,14 @@
 /**
- * In-memory metrics for mcp-manager.
+ * Metrics for mcp-manager.
  * Tracks per-server call counts, errors, and latency.
+ * Persists to metrics.yaml on save, reloads on start.
  */
 
-interface ServerMetrics {
+import { existsSync, readFileSync, writeFileSync } from "fs";
+import { join } from "path";
+import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
+
+export interface ServerMetrics {
   calls: number;
   errors: number;
   totalLatencyMs: number;
@@ -12,6 +17,7 @@ interface ServerMetrics {
 }
 
 const metrics: Record<string, ServerMetrics> = {};
+let metricsFile: string | null = null;
 
 function ensure(server: string): ServerMetrics {
   if (!metrics[server]) {
@@ -31,6 +37,42 @@ export function recordCall(server: string, latencyMs: number, isError: boolean):
 
 export function getMetrics(): Record<string, ServerMetrics> {
   return { ...metrics };
+}
+
+/** Clear all metrics (for testing). */
+export function resetMetrics(): void {
+  for (const key of Object.keys(metrics)) delete metrics[key];
+  metricsFile = null;
+}
+
+/** Set the file path and load persisted metrics. Call once at startup. */
+export function initMetrics(baseDir: string): void {
+  metricsFile = join(baseDir, "metrics.yaml");
+  if (!existsSync(metricsFile)) return;
+  try {
+    const data = parseYaml(readFileSync(metricsFile, "utf-8"));
+    if (data && typeof data === "object") {
+      for (const [name, m] of Object.entries(data) as [string, any][]) {
+        if (m && typeof m.calls === "number") {
+          metrics[name] = {
+            calls: m.calls || 0,
+            errors: m.errors || 0,
+            totalLatencyMs: m.totalLatencyMs || 0,
+            maxLatencyMs: m.maxLatencyMs || 0,
+            lastCallAt: m.lastCallAt || 0,
+          };
+        }
+      }
+    }
+  } catch {}
+}
+
+/** Write current metrics to disk. Call on exit. */
+export function saveMetrics(): void {
+  if (!metricsFile || Object.keys(metrics).length === 0) return;
+  try {
+    writeFileSync(metricsFile, stringifyYaml(metrics));
+  } catch {}
 }
 
 export function formatMetrics(): string {

@@ -9,6 +9,7 @@ export { details } from "./query/details.js";
 export { tools } from "./query/tools.js";
 export { status } from "./query/status.js";
 export { help } from "./query/help.js";
+export { logs } from "./query/logs.js";
 
 // Call operation
 export { call } from "./call/call.js";

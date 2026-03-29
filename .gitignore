@@ -2,6 +2,7 @@
 servers.yaml
 hooks.yaml
 capabilities-cache.yaml
+metrics.yaml
 metadata.yaml
 .mcp.json
 

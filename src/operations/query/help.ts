@@ -16,6 +16,8 @@ export async function help(): Promise<OperationResult> {
   tools          List tools for a server (or all running)
                  params: server?
   status         System health, memory, diagnostics
+  logs           Tail recent log entries
+                 params: server?
   help           Show this help
 
 ## Call Operation (proxy to backend)
