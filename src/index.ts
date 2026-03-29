@@ -9,8 +9,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { spawn, ChildProcess } from "child_process";
-import { readFileSync, writeFileSync, existsSync, readdirSync, appendFileSync } from "fs";
+import { spawn } from "child_process";
+import { readFileSync, writeFileSync, existsSync, appendFileSync } from "fs";
 import { join, dirname } from "path";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import { createInterface } from "readline";
