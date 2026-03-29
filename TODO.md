@@ -3,7 +3,7 @@
 ## Status: All review/cleanup complete. Project is stable and well-tested.
 
 ## Next (value-add features)
-- [ ] Add middleware tests to CI (GitHub Actions test job)
+- [x] Add middleware tests to CI (GitHub Actions test job)
 - [ ] Server health check: periodic ping to detect crashed servers, auto-restart
 - [ ] Tool response caching for idempotent queries (reduce backend load)
 - [ ] Metrics endpoint: track tool call counts, latency percentiles per server
