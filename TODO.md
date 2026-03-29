@@ -2,9 +2,11 @@
 
 ## Current tasks (2026-03-28)
 
-- [ ] Fix stdio transport concurrency bug — sendRequest creates a new readline per call, racing on stdout
-- [ ] Add persistent per-server readline with request ID dispatch
-- [ ] Add test coverage for lifecycle operations (start/stop/restart)
+- [x] Fix stdio transport concurrency bug — sendRequest creates a new readline per call, racing on stdout
+- [x] Add persistent per-server readline with request ID dispatch
+- [x] Clean up readline and pending requests on server stop
+- [ ] Add test coverage for utils.ts (sanitizeLog, validatePath, formatBytes)
+- [ ] Add test coverage for hooks.ts (pattern matching, extraction)
 - [ ] Add test coverage for search operation
 - [ ] Add HTTP server health check in idle checker
 
