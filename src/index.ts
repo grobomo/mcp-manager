@@ -387,6 +387,25 @@ async function callServerTool(
 
 // ============ Server Management ============
 
+/** Register tools from a server into TOOLS and TOOL_MAP */
+function registerTools(name: string, server: RunningServer, tools: Tool[]): void {
+  TOOLS[name] = tools;
+  server.toolsCount = tools.length;
+  for (const tool of tools) {
+    if (tool.name) {
+      TOOL_MAP[`${name}:${tool.name}`] = name;
+      TOOL_MAP[tool.name] = name;
+    }
+  }
+}
+
+/** Finalize server registration: save metadata, update cache */
+function finalizeServerStart(name: string, server: RunningServer): void {
+  RUNNING[name] = server;
+  saveToolsToMetadata(name, TOOLS[name]);
+  updateCapabilitiesCache();
+}
+
 async function startServer(name: string): Promise<[boolean, string]> {
   if (!(name in SERVERS)) return [false, `Unknown server: ${name}`];
   if (name in RUNNING) return [false, `Server already running: ${name}`];
@@ -413,21 +432,11 @@ async function startServer(name: string): Promise<[boolean, string]> {
         return [false, `Failed to initialize HTTP server: ${e.message}`];
       }
       try {
-        const tools = await listServerTools(server, reqTimeout);
-        TOOLS[name] = tools;
-        server.toolsCount = tools.length;
-        for (const tool of tools) {
-          if (tool.name) {
-            TOOL_MAP[`${name}:${tool.name}`] = name;
-            TOOL_MAP[tool.name] = name;
-          }
-        }
+        registerTools(name, server, await listServerTools(server, reqTimeout));
       } catch (e: any) {
         return [false, `Failed to list tools: ${e.message}`];
       }
-      RUNNING[name] = server;
-      saveToolsToMetadata(name, TOOLS[name]);
-      updateCapabilitiesCache();
+      finalizeServerStart(name, server);
       return [true, `Connected to ${name} (HTTP) with ${server.toolsCount} tools`];
     } catch (e: any) {
       return [false, `Failed to connect to ${name}: ${e.message}`];
@@ -469,23 +478,13 @@ async function startServer(name: string): Promise<[boolean, string]> {
     }
 
     try {
-      const tools = await listServerTools(server, reqTimeout);
-      TOOLS[name] = tools;
-      server.toolsCount = tools.length;
-      for (const tool of tools) {
-        if (tool.name) {
-          TOOL_MAP[`${name}:${tool.name}`] = name;
-          TOOL_MAP[tool.name] = name;
-        }
-      }
+      registerTools(name, server, await listServerTools(server, reqTimeout));
     } catch (e: any) {
       proc.kill();
       return [false, `Failed to list tools: ${e.message}`];
     }
 
-    RUNNING[name] = server;
-    saveToolsToMetadata(name, TOOLS[name]);
-    updateCapabilitiesCache();
+    finalizeServerStart(name, server);
     return [true, `Started ${name} with ${server.toolsCount} tools`];
   } catch (e: any) {
     return [false, `Failed to start ${name}: ${e.message}`];
