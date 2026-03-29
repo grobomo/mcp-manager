@@ -1,15 +1,10 @@
 /**
  * Shared utilities for mcp-manager
- *
- * TODO:
- * - Add more sensitive patterns as discovered
- * - Add file locking for concurrent access
- * - Add session ID generation
  */
 
-import { resolve, join } from "path";
+import { resolve, join, dirname } from "path";
 import { fileURLToPath } from "url";
-import { dirname } from "path";
+import { execSync } from "child_process";
 
 // Base paths
 const __filename = fileURLToPath(import.meta.url);
@@ -99,7 +94,6 @@ export const DEFAULT_IDLE_TIMEOUT = 3600000;
  */
 export function getProcessMemoryMB(pid: number): number | null {
   try {
-    const { execSync } = require("child_process");
     if (process.platform === "win32") {
       const output = execSync(
         `wmic process where ProcessId=${pid} get WorkingSetSize 2>nul`,

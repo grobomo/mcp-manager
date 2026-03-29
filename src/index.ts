@@ -13,9 +13,8 @@ import { spawn, ChildProcess } from "child_process";
 import { readFileSync, writeFileSync, existsSync, readdirSync, appendFileSync } from "fs";
 import { join, dirname } from "path";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
-import { fileURLToPath } from "url";
 import { createInterface } from "readline";
-import { sanitizeLog } from "./utils.js";
+import { sanitizeLog, BASE_DIR, MCP_ROOT } from "./utils.js";
 import { loadHooks, executeHooks } from "./hooks.js";
 
 // Operations
@@ -24,9 +23,6 @@ import type { McpmContext, McpmParams, ServerConfig, RunningServer, Tool, Cached
 
 // ============ State ============
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const BASE_DIR = join(__dirname, "..");
 const SERVERS_FILE = join(BASE_DIR, "servers.yaml");
 const LOG_FILE = join(BASE_DIR, "mcp-manager.log");
 const CAPABILITIES_CACHE_FILE = join(BASE_DIR, "capabilities-cache.yaml");
@@ -168,7 +164,6 @@ function updateCapabilitiesCache(): void {
 }
 
 function saveToolsToMetadata(serverName: string, tools: Tool[]): void {
-  const MCP_ROOT = join(BASE_DIR, "..");
   let metadataPath = join(MCP_ROOT, `mcp-${serverName}`, "metadata.yaml");
   if (!existsSync(dirname(metadataPath))) {
     metadataPath = join(MCP_ROOT, serverName, "metadata.yaml");
@@ -189,7 +184,6 @@ function saveToolsToMetadata(serverName: string, tools: Tool[]): void {
 }
 
 function readServerMetadata(serverName: string): Record<string, any> | null {
-  const MCP_ROOT = join(BASE_DIR, "..");
   const metadataPath = join(MCP_ROOT, serverName, "metadata.yaml");
   if (!existsSync(metadataPath)) return null;
   try {
