@@ -205,11 +205,10 @@ defaults:
 | `url` | string | - | HTTP/WebSocket URL (alternative to command) |
 | `enabled` | bool | true | Whether server is available |
 | `auto_start` | bool | false | Start automatically with Claude |
-| `idle_timeout` | int | 300000 | Auto-stop after idle (ms) |
-| `startup_delay` | int | 0 | Wait before initializing (ms) |
+| `idle_timeout` | int | 3600000 | Auto-stop after idle (ms, default 1 hour) |
+| `startup_delay` | int | 2000 | Wait before initializing (ms) |
 | `env` | dict | {} | Environment variables |
-| `tags` | list | [] | Categorization tags |
-| `keywords` | list | [] | Auto-start trigger keywords |
+| `tags` | list | [] | Categorization tags (use `no_auto_stop` to exempt from idle timeout) |
 
 ### Path Conventions
 
