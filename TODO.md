@@ -1,9 +1,10 @@
 # mcp-manager
 
-## Status: All review/cleanup complete. Project is stable and well-tested.
+## Status: All tasks complete. CI green. Project stable and production-ready.
 
-## Next (value-add features)
-- [x] Add middleware tests to CI (GitHub Actions test job)
+## Completed (session 2, 2026-03-28)
+- [x] Add middleware tests to CI (GitHub Actions test + secret-scan)
+- [x] Fix CI: secret-scan.yml self-matching its own regex patterns
 - [x] Server health check: detect crashed stdio processes, auto-restart if auto_start
 - [x] Metrics: per-server call counts, errors, avg/max latency (in status output)
 - [x] Harden stdio transport: catch stdin.write errors on dead processes
