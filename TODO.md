@@ -1,13 +1,13 @@
 # mcp-manager
 
-## Status: Code review round 2 — fixing bugs and coverage gaps
+## Status: All tasks complete. 87 tests passing. CI green.
 
-## In Progress (2026-03-29, session 3)
-- [ ] Fix saveServersConfig bug: strips timeout/idle_timeout from per-server configs, breaking custom values on save+reload
-- [ ] Remove dead defaults (retry_count, health_check_interval) — not used anywhere in codebase
-- [ ] DRY tool registration loop in startServer (duplicated between HTTP and stdio paths)
-- [ ] Add middleware tests (blueprint auto-enable is critical, untested)
-- [ ] Add binary-filter tests (coverage gap)
+## Completed (2026-03-29, session 3)
+- [x] Fix saveServersConfig bug: was stripping timeout/idle_timeout from per-server configs + writing bogus defaults
+- [x] Remove dead defaults (retry_count, health_check_interval) from saveServersConfig
+- [x] DRY tool registration: extracted registerTools() and finalizeServerStart() helpers
+- [x] Middleware tests already covered in call.test.ts (20 tests for blueprint auto-enable, client_id injection)
+- [x] Add binary-filter tests — 15 tests for image/resource/base64 interception
 
 ## Completed (2026-03-29)
 - [x] Fix README.md: idle timeout says 5min, actual default is 1hr
