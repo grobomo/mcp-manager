@@ -4,9 +4,9 @@
 
 ## Next (value-add features)
 - [x] Add middleware tests to CI (GitHub Actions test job)
-- [ ] Server health check: periodic ping to detect crashed servers, auto-restart
+- [x] Server health check: detect crashed stdio processes, auto-restart if auto_start
+- [x] Metrics: per-server call counts, errors, avg/max latency (in status output)
 - [ ] Tool response caching for idempotent queries (reduce backend load)
-- [ ] Metrics endpoint: track tool call counts, latency percentiles per server
 
 ## Completed (2026-03-28)
 - [x] DRY: add MCP_ROOT to McpmContext, eliminate 4 duplicate computations
