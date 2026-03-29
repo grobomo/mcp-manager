@@ -1,6 +1,6 @@
 {
   "name": "mcp-manager",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Dynamic MCP Server Proxy Router",
   "main": "build/index.js",
   "scripts": {
