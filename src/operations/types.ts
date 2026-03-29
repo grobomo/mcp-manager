@@ -17,6 +17,12 @@ export interface ServerConfig {
   idle_timeout?: number;
 }
 
+export interface PendingRequest {
+  resolve: (value: any) => void;
+  reject: (reason: any) => void;
+  timeoutId: NodeJS.Timeout;
+}
+
 export interface RunningServer {
   process?: import("child_process").ChildProcess;
   url?: string;
@@ -29,6 +35,10 @@ export interface RunningServer {
     transport?: string;
     [key: string]: any;
   };
+  /** Persistent readline for stdio servers — one per server, shared across requests */
+  readline?: import("readline").Interface;
+  /** Pending requests awaiting response, keyed by request ID */
+  pendingRequests?: Map<number, PendingRequest>;
 }
 
 export interface Tool {
