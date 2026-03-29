@@ -1,15 +1,21 @@
 # mcp-manager
 
-## Status: Review complete. Next: step 3 (optimize/harden) and step 4 (expand).
+## Status: All review/cleanup complete. Project is stable and well-tested.
 
-## In Progress
-- [ ] Add server-specific middleware pattern in call.ts for other servers needing special handling
-- [ ] context-reset: test wrapper, wire as callable tool from stop hook
+## Next (value-add features)
+- [ ] Add middleware tests to CI (GitHub Actions test job)
+- [ ] Server health check: periodic ping to detect crashed servers, auto-restart
+- [ ] Tool response caching for idempotent queries (reduce backend load)
+- [ ] Metrics endpoint: track tool call counts, latency percentiles per server
 
 ## Completed (2026-03-28)
-- [x] Write tests for call.ts blueprint middleware (21 tests, all passing)
+- [x] DRY: add MCP_ROOT to McpmContext, eliminate 4 duplicate computations
+- [x] DRY: import BASE_DIR from utils.ts, fix CJS require in ESM, remove stale TODO
+- [x] Refactor call.ts: extract server middleware into pluggable middleware.ts
+- [x] context-reset: tested (dry-run works), already wired in stop hook auto-continue.js
+- [x] Write tests for call.ts blueprint middleware (20 tests, all passing)
 - [x] Add .github/workflows/secret-scan.yml (already existed)
-- [x] Verify hook-runner enforcement-gate works with mcp-manager (module installed, all checks pass)
+- [x] Verify hook-runner enforcement-gate works with mcp-manager
 - [x] Blueprint auto-enable middleware (auto-inject client_id, auto-enable on browser_* calls)
 - [x] Required param validation for non-blueprint servers
 - [x] Blueprint CLAUDE.md workflow docs
