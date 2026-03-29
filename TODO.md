@@ -1,9 +1,12 @@
 # mcp-manager
 
-## Current tasks
-- [ ] Fix README.md: idle timeout says 5min, actual default is 1hr
-- [ ] Fix README.md: remove undocumented `keywords` server option
-- [ ] Add new features to README: health checks, metrics, concurrency-safe stdio
+## Status: All tasks complete. 72 tests passing. CI green.
+
+## Completed (2026-03-29)
+- [x] Fix README.md: idle timeout says 5min, actual default is 1hr
+- [x] Fix README.md: remove undocumented `keywords` server option
+- [x] Add new features to README: health checks, metrics
+- [x] Fix credential helper rule: use double quotes (root cause of \\!gh bug)
 
 ## Completed (2026-03-29)
 - [x] Extract duplicated server cleanup into `cleanupServer()` helper (DRY — was in 3 places)
