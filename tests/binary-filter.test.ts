@@ -19,9 +19,9 @@ describe("binary-filter: processBinaryContent", () => {
     assert.deepEqual(result, []);
   });
 
-  it("returns empty array for non-array content", () => {
+  it("passes through non-array content as-is", () => {
     const result = processBinaryContent("not an array" as any, "test-server");
-    assert.deepEqual(result, []);
+    assert.equal(result as any, "not an array");
   });
 
   it("passes through text content unchanged", () => {
