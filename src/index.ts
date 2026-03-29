@@ -62,6 +62,15 @@ function checkIdleServers(): void {
     // Health check: detect crashed stdio processes and auto-restart
     if (server.process && server.process.exitCode !== null) {
       log(`HEALTH: ${name} process exited (code ${server.process.exitCode}), cleaning up...`);
+      if (server.readline) {
+        server.readline.close();
+      }
+      if (server.pendingRequests) {
+        for (const [, pending] of server.pendingRequests) {
+          clearTimeout(pending.timeoutId);
+          pending.reject(new Error("Server process exited"));
+        }
+      }
       delete RUNNING[name];
       if (TOOLS[name]) {
         for (const tool of TOOLS[name]) {
