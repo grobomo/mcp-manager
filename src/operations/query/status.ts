@@ -4,6 +4,7 @@
 
 import type { McpmContext, OperationResult } from "../types.js";
 import { DEFAULT_IDLE_TIMEOUT, getProcessMemoryMB, formatBytes } from "../../utils.js";
+import { formatMetrics } from "../../metrics.js";
 
 export async function status(ctx: McpmContext): Promise<OperationResult> {
   const lines = ["# MCP Manager Status", ""];
@@ -49,6 +50,8 @@ export async function status(ctx: McpmContext): Promise<OperationResult> {
 
   lines.push("");
   lines.push(`Total RAM: ${formatBytes(totalMem)}`);
+  lines.push("");
+  lines.push(formatMetrics());
 
   return { content: [{ type: "text", text: lines.join("\n") }] };
 }

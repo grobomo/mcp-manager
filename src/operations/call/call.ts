@@ -6,6 +6,7 @@ import type { McpmContext, OperationResult, McpmParams } from "../types.js";
 import { executeHooks } from "../../hooks.js";
 import { processBinaryContent } from "../../binary-filter.js";
 import { runMiddleware, hasMiddleware } from "./middleware.js";
+import { recordCall } from "../../metrics.js";
 
 export async function call(ctx: McpmContext, params: McpmParams): Promise<OperationResult> {
   const serverName = params.server;
@@ -111,12 +112,16 @@ export async function call(ctx: McpmContext, params: McpmParams): Promise<Operat
       ctx.log(`CALL ${serverName}:${toolName} -> OK (${elapsed}ms)`);
     }
 
+    // Record metrics
+    recordCall(serverName, elapsed, false);
+
     // Execute hooks (async, non-blocking)
     executeHooks(toolName, args, resultText, serverName, ctx.callServerTool, ctx.RUNNING, ctx.SERVERS, ctx.log);
 
     return { content: [{ type: "text", text: resultText }] };
   } catch (e: any) {
     const elapsed = Date.now() - startTime;
+    recordCall(serverName, elapsed, true);
     ctx.log(`CALL ${serverName}:${toolName} -> ERROR (${elapsed}ms): ${e.message}`);
     return { content: [{ type: "text", text: `Error: ${e.message}` }] };
   }
