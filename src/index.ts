@@ -58,9 +58,32 @@ function checkIdleServers(): void {
   const now = Date.now();
   for (const [name, server] of Object.entries(RUNNING)) {
     const config = SERVERS[name];
+
+    // Health check: detect crashed stdio processes and auto-restart
+    if (server.process && server.process.exitCode !== null) {
+      log(`HEALTH: ${name} process exited (code ${server.process.exitCode}), cleaning up...`);
+      delete RUNNING[name];
+      if (TOOLS[name]) {
+        for (const tool of TOOLS[name]) {
+          delete TOOL_MAP[`${name}:${tool.name}`];
+          if (TOOL_MAP[tool.name] === name) delete TOOL_MAP[tool.name];
+        }
+        delete TOOLS[name];
+      }
+      // Auto-restart if auto_start is enabled
+      if (config?.auto_start && config?.enabled !== false) {
+        log(`HEALTH: ${name} auto-restarting...`);
+        startServer(name).then(([ok, msg]) => {
+          log(`HEALTH: ${name} restart -> ${ok ? "OK" : msg}`);
+        }).catch(e => log(`HEALTH: ${name} restart error: ${e.message}`));
+      }
+      continue;
+    }
+
+    // Idle timeout check
+    if (config?.tags?.includes("no_auto_stop")) continue;
     const idleTimeout = config?.idle_timeout || DEFAULT_IDLE_TIMEOUT;
     const idleTime = now - server.lastActivity;
-    if (config?.tags?.includes("no_auto_stop")) continue;
     if (idleTime < idleTimeout) continue;
     log(`IDLE: ${name} idle for ${Math.round(idleTime/1000)}s, stopping...`);
     const [success, msg] = stopServer(name);
