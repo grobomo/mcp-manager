@@ -54,6 +54,36 @@ const IDLE_CHECK_INTERVAL = 60000;
 
 let idleCheckTimer: NodeJS.Timeout | null = null;
 
+/**
+ * Clean up a server's resources: readline, pending requests, tool map, RUNNING entry.
+ * Used by stopServer, crash detection, and HTTP health check.
+ */
+function cleanupServer(name: string, reason: string): void {
+  const server = RUNNING[name];
+  if (!server) return;
+
+  if (server.readline) {
+    server.readline.close();
+    server.readline = undefined;
+  }
+  if (server.pendingRequests) {
+    for (const [, pending] of server.pendingRequests) {
+      clearTimeout(pending.timeoutId);
+      pending.reject(new Error(reason));
+    }
+    server.pendingRequests.clear();
+    server.pendingRequests = undefined;
+  }
+  if (TOOLS[name]) {
+    for (const tool of TOOLS[name]) {
+      delete TOOL_MAP[`${name}:${tool.name}`];
+      if (TOOL_MAP[tool.name] === name) delete TOOL_MAP[tool.name];
+    }
+    delete TOOLS[name];
+  }
+  delete RUNNING[name];
+}
+
 function checkIdleServers(): void {
   const now = Date.now();
   for (const [name, server] of Object.entries(RUNNING)) {
@@ -62,24 +92,7 @@ function checkIdleServers(): void {
     // Health check: detect crashed stdio processes and auto-restart
     if (server.process && server.process.exitCode !== null) {
       log(`HEALTH: ${name} process exited (code ${server.process.exitCode}), cleaning up...`);
-      if (server.readline) {
-        server.readline.close();
-      }
-      if (server.pendingRequests) {
-        for (const [, pending] of server.pendingRequests) {
-          clearTimeout(pending.timeoutId);
-          pending.reject(new Error("Server process exited"));
-        }
-      }
-      delete RUNNING[name];
-      if (TOOLS[name]) {
-        for (const tool of TOOLS[name]) {
-          delete TOOL_MAP[`${name}:${tool.name}`];
-          if (TOOL_MAP[tool.name] === name) delete TOOL_MAP[tool.name];
-        }
-        delete TOOLS[name];
-      }
-      // Auto-restart if auto_start is enabled
+      cleanupServer(name, "Server process exited");
       if (config?.auto_start && config?.enabled !== false) {
         log(`HEALTH: ${name} auto-restarting...`);
         startServer(name).then(([ok, msg]) => {
@@ -119,14 +132,7 @@ async function checkHttpServerHealth(name: string, server: RunningServer, config
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
   } catch (e: any) {
     log(`HEALTH: ${name} HTTP unreachable: ${e.message}, removing from RUNNING`);
-    delete RUNNING[name];
-    if (TOOLS[name]) {
-      for (const tool of TOOLS[name]) {
-        delete TOOL_MAP[`${name}:${tool.name}`];
-        if (TOOL_MAP[tool.name] === name) delete TOOL_MAP[tool.name];
-      }
-      delete TOOLS[name];
-    }
+    cleanupServer(name, `HTTP server unreachable: ${e.message}`);
     if (config?.auto_start && config?.enabled !== false) {
       log(`HEALTH: ${name} auto-restarting...`);
       const [ok, msg] = await startServer(name);
