@@ -5,7 +5,8 @@
 - [x] Fix stdio transport concurrency bug — sendRequest creates a new readline per call, racing on stdout
 - [x] Add persistent per-server readline with request ID dispatch
 - [x] Clean up readline and pending requests on server stop
-- [ ] Add test coverage for utils.ts (sanitizeLog, validatePath, formatBytes)
+- [x] Add test coverage for utils.ts (sanitizeLog, validatePath, formatBytes)
+- [x] Add test coverage for lifecycle operations (start, stop, restart, enable)
 - [ ] Add test coverage for hooks.ts (pattern matching, extraction)
 - [ ] Add test coverage for search operation
 - [ ] Add HTTP server health check in idle checker
