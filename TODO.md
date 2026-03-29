@@ -1,14 +1,11 @@
 # mcp-manager
 
-## Status: In progress — cleanup and hardening pass
-
-## Current tasks
-- [ ] Extract duplicated server cleanup into `cleanupServer()` helper (DRY — used in 3 places)
-- [ ] Fix HTTP health check: reject pending requests before removing server
-- [ ] Remove unused imports (ChildProcess, readdirSync) — DONE
-- [ ] Push all changes
+## Status: All tasks complete. 72 tests passing. Pushed.
 
 ## Completed this session (2026-03-28)
+- [x] Extract duplicated server cleanup into `cleanupServer()` helper (DRY — was in 3 places)
+- [x] Fix HTTP health check: reject pending requests before removing server
+- [x] Remove unused imports (ChildProcess, readdirSync)
 - [x] Fix stdio transport concurrency bug — persistent readline per server with request ID dispatch
 - [x] Clean up readline and pending requests on server stop and crash detection
 - [x] Add test coverage for utils.ts (sanitizeLog, validatePath, formatBytes) — 17 tests
