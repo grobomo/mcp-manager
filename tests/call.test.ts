@@ -382,4 +382,139 @@ describe("call: error handling", () => {
 
     assert.match(result.content[0].text, /connection refused/);
   });
+
+  it("does not retry on non-crash errors", async () => {
+    let startCalled = false;
+    const ctx = makeContext({
+      callServerTool: async () => { throw new Error("invalid arguments"); },
+      startServer: async () => { startCalled = true; return [true, "started"] as [boolean, string]; },
+    });
+
+    await call(ctx, makeParams({
+      server: "wiki-lite",
+      tool: "wiki_search",
+      arguments: { query: "test" },
+    }));
+
+    assert.ok(!startCalled, "should not attempt restart for non-crash errors");
+  });
+});
+
+describe("call: auto-retry on crash", () => {
+  it("retries after stdin write failure", async () => {
+    let callCount = 0;
+    const ctx = makeContext({
+      callServerTool: async () => {
+        callCount++;
+        if (callCount === 1) throw new Error("Failed to write to server stdin: write EPIPE");
+        return { content: [{ type: "text", text: "retry ok" }] };
+      },
+      stopServer: () => {
+        delete ctx.RUNNING["wiki-lite"];
+        return [true, "stopped"] as [boolean, string];
+      },
+      startServer: async (name: string) => {
+        ctx.RUNNING[name] = makeRunningServer();
+        return [true, "started"] as [boolean, string];
+      },
+    });
+
+    const result = await call(ctx, makeParams({
+      server: "wiki-lite",
+      tool: "wiki_search",
+      arguments: { query: "test" },
+    }));
+
+    assert.equal(result.content[0].text, "retry ok");
+    assert.equal(callCount, 2, "should have called tool twice (original + retry)");
+  });
+
+  it("retries after EPIPE error", async () => {
+    let callCount = 0;
+    const ctx = makeContext({
+      callServerTool: async () => {
+        callCount++;
+        if (callCount === 1) throw new Error("write EPIPE");
+        return { content: [{ type: "text", text: "ok" }] };
+      },
+      stopServer: () => {
+        delete ctx.RUNNING["wiki-lite"];
+        return [true, "stopped"] as [boolean, string];
+      },
+      startServer: async (name: string) => {
+        ctx.RUNNING[name] = makeRunningServer();
+        return [true, "started"] as [boolean, string];
+      },
+    });
+
+    const result = await call(ctx, makeParams({
+      server: "wiki-lite",
+      tool: "wiki_search",
+      arguments: { query: "test" },
+    }));
+
+    assert.equal(result.content[0].text, "ok");
+  });
+
+  it("returns error when restart fails", async () => {
+    const ctx = makeContext({
+      callServerTool: async () => { throw new Error("Failed to write to server stdin: broken"); },
+      stopServer: () => {
+        delete ctx.RUNNING["wiki-lite"];
+        return [true, "stopped"] as [boolean, string];
+      },
+      startServer: async () => [false, "port in use"] as [boolean, string],
+    });
+
+    const result = await call(ctx, makeParams({
+      server: "wiki-lite",
+      tool: "wiki_search",
+      arguments: { query: "test" },
+    }));
+
+    assert.match(result.content[0].text, /restart failed/);
+    assert.match(result.content[0].text, /port in use/);
+  });
+
+  it("returns retry error when retry also fails", async () => {
+    const ctx = makeContext({
+      callServerTool: async () => { throw new Error("Failed to write to server stdin: broken"); },
+      stopServer: () => {
+        delete ctx.RUNNING["wiki-lite"];
+        return [true, "stopped"] as [boolean, string];
+      },
+      startServer: async (name: string) => {
+        ctx.RUNNING[name] = makeRunningServer();
+        return [true, "started"] as [boolean, string];
+      },
+    });
+
+    const result = await call(ctx, makeParams({
+      server: "wiki-lite",
+      tool: "wiki_search",
+      arguments: { query: "test" },
+    }));
+
+    assert.match(result.content[0].text, /Error after retry/);
+  });
+
+  it("does not retry for disabled servers", async () => {
+    let startCalled = false;
+    const ctx = makeContext({
+      SERVERS: {
+        ...makeContext().SERVERS,
+        "wiki-lite": { name: "wiki-lite", enabled: false } as any,
+      },
+      callServerTool: async () => { throw new Error("Failed to write to server stdin: broken"); },
+      startServer: async () => { startCalled = true; return [true, "started"] as [boolean, string]; },
+    });
+
+    await call(ctx, makeParams({
+      server: "wiki-lite",
+      tool: "wiki_search",
+      arguments: { query: "test" },
+    }));
+
+    assert.ok(!startCalled, "should not restart disabled server");
+  });
 });
