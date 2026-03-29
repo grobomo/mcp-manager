@@ -1,6 +1,12 @@
 # mcp-manager
 
-## Status: All tasks complete. Project stable and shipped.
+## Current tasks (2026-03-28)
+
+- [ ] Fix stdio transport concurrency bug — sendRequest creates a new readline per call, racing on stdout
+- [ ] Add persistent per-server readline with request ID dispatch
+- [ ] Add test coverage for lifecycle operations (start/stop/restart)
+- [ ] Add test coverage for search operation
+- [ ] Add HTTP server health check in idle checker
 
 ## All completed (2026-03-28)
 - [x] Blueprint auto-enable middleware
@@ -14,8 +20,4 @@
 - [x] Archive dead code (logging.ts, organize/)
 - [x] Track blueprint state in memory
 - [x] Fix argsStr logging after middleware
-
-## Related projects shipped same session
-- grobomo/hook-runner — modular hook system with SessionStart, PreToolUse, PostToolUse, Stop
-- grobomo/context-reset — autonomous context reset with jsonl-based verification and tab safety
-- blueprint-extra-mcp CLAUDE.md — workflow documentation
+- [x] Add .claude/ to .gitignore
