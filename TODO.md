@@ -1,10 +1,6 @@
 # mcp-manager
 
-## Status: Expanding — reliability and version alignment
-
-## In Progress (2026-03-29, session 3 continued)
-- [ ] Bump package.json version to 2.0.0 (matches code, 54 commits of changes)
-- [ ] Add call retry on server crash: if tool call fails, auto-restart server and retry once
+## Status: All tasks complete. 93 tests passing. CI green.
 
 ## Completed (2026-03-29, session 3)
 - [x] Fix saveServersConfig bug: was stripping timeout/idle_timeout from per-server configs + writing bogus defaults
@@ -12,6 +8,8 @@
 - [x] DRY tool registration: extracted registerTools() and finalizeServerStart() helpers
 - [x] Middleware tests already covered in call.test.ts (20 tests for blueprint auto-enable, client_id injection)
 - [x] Add binary-filter tests — 15 tests for image/resource/base64 interception
+- [x] Bump package.json version to 2.0.0 (matches code)
+- [x] Add call retry on server crash: auto-restart + retry once on stdin/EPIPE errors (6 tests)
 
 ## Completed (2026-03-29)
 - [x] Fix README.md: idle timeout says 5min, actual default is 1hr
