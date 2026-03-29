@@ -10,7 +10,7 @@ const { sanitizeLog, validatePath, formatBytes, generateSessionId, DEFAULT_IDLE_
 
 describe("sanitizeLog", () => {
   it("redacts GitHub tokens", () => {
-    assert.match(sanitizeLog("token ghp_aBcDeFgHiJkLmNoPqRsTuVwXyZ012345678"), /\[GH_TOKEN\]/);
+    assert.match(sanitizeLog("token ghp_aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789ab"), /\[GH_TOKEN\]/);
   });
 
   it("redacts GitHub PATs", () => {
