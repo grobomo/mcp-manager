@@ -123,6 +123,43 @@ export async function call(ctx: McpmContext, params: McpmParams): Promise<Operat
     const elapsed = Date.now() - startTime;
     recordCall(serverName, elapsed, true);
     ctx.log(`CALL ${serverName}:${toolName} -> ERROR (${elapsed}ms): ${e.message}`);
+
+    // Auto-retry once if the error suggests a crashed server process
+    const crashPatterns = ["stdin", "Server process exited", "EPIPE", "ERR_STREAM", "channel closed"];
+    const isCrash = crashPatterns.some(p => e.message.includes(p));
+    if (isCrash && serverName in ctx.SERVERS && ctx.SERVERS[serverName].enabled !== false) {
+      ctx.log(`CALL ${serverName}:${toolName} -> server appears crashed, restarting and retrying...`);
+      if (serverName in ctx.RUNNING) ctx.stopServer(serverName);
+      const [started, startMsg] = await ctx.startServer(serverName);
+      if (!started) {
+        ctx.log(`CALL ${serverName}:${toolName} -> restart failed: ${startMsg}`);
+        return { content: [{ type: "text", text: `Error: ${e.message} (restart failed: ${startMsg})` }] };
+      }
+      try {
+        const reqTimeout = ctx.SERVERS[serverName]?.timeout || 60000;
+        ctx.RUNNING[serverName].lastActivity = Date.now();
+        const retryResult = await ctx.callServerTool(reqTimeout, ctx.RUNNING[serverName], toolName, args);
+        const retryElapsed = Date.now() - startTime;
+        recordCall(serverName, retryElapsed, false);
+        const rawContent = retryResult?.content;
+        const content = processBinaryContent(rawContent, serverName);
+        let resultText: string;
+        if (Array.isArray(content)) {
+          resultText = content.filter((c: any) => c.type === "text").map((c: any) => c.text).join("\n");
+        } else {
+          resultText = JSON.stringify(retryResult, null, 2);
+        }
+        ctx.log(`CALL ${serverName}:${toolName} -> RETRY OK (${retryElapsed}ms)`);
+        executeHooks(toolName, args, resultText, serverName, ctx.callServerTool, ctx.RUNNING, ctx.SERVERS, ctx.log);
+        return { content: [{ type: "text", text: resultText }] };
+      } catch (retryErr: any) {
+        const retryElapsed = Date.now() - startTime;
+        recordCall(serverName, retryElapsed, true);
+        ctx.log(`CALL ${serverName}:${toolName} -> RETRY FAILED (${retryElapsed}ms): ${retryErr.message}`);
+        return { content: [{ type: "text", text: `Error after retry: ${retryErr.message}` }] };
+      }
+    }
+
     return { content: [{ type: "text", text: `Error: ${e.message}` }] };
   }
 }
