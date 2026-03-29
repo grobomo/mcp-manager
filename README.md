@@ -30,7 +30,9 @@ That's it. Setup builds the project, creates `servers.yaml`, configures `.mcp.js
 - **Single Tool Interface** - One `mcpm` tool with operations (token-efficient: ~300 tokens vs ~3000)
 - **Dynamic Loading** - Start/stop MCP servers on demand without restarting Claude
 - **On-Demand Start** - Servers start automatically when tools are called
-- **Auto-Stop** - Idle servers stop after 5 minutes to save memory
+- **Auto-Stop** - Idle servers stop after 1 hour to save memory (configurable)
+- **Health Checks** - Detects crashed stdio processes and unreachable HTTP servers, auto-restarts
+- **Call Metrics** - Per-server call counts, errors, and latency tracking
 - **Capabilities Caching** - See available tools even when servers are stopped
 - **Cross-Platform** - Works on Windows, macOS, and Linux
 
