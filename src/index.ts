@@ -89,6 +89,11 @@ function checkIdleServers(): void {
       continue;
     }
 
+    // Health check: detect unreachable HTTP servers
+    if (server.url && !server.process) {
+      checkHttpServerHealth(name, server, config).catch(() => {});
+    }
+
     // Idle timeout check
     if (config?.tags?.includes("no_auto_stop")) continue;
     const idleTimeout = config?.idle_timeout || DEFAULT_IDLE_TIMEOUT;
@@ -97,6 +102,36 @@ function checkIdleServers(): void {
     log(`IDLE: ${name} idle for ${Math.round(idleTime/1000)}s, stopping...`);
     const [success, msg] = stopServer(name);
     log(`IDLE: ${name} -> ${success ? "stopped" : msg}`);
+  }
+}
+
+async function checkHttpServerHealth(name: string, server: RunningServer, config: ServerConfig): Promise<void> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const response = await fetch(server.url!, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 0, method: "ping" }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  } catch (e: any) {
+    log(`HEALTH: ${name} HTTP unreachable: ${e.message}, removing from RUNNING`);
+    delete RUNNING[name];
+    if (TOOLS[name]) {
+      for (const tool of TOOLS[name]) {
+        delete TOOL_MAP[`${name}:${tool.name}`];
+        if (TOOL_MAP[tool.name] === name) delete TOOL_MAP[tool.name];
+      }
+      delete TOOLS[name];
+    }
+    if (config?.auto_start && config?.enabled !== false) {
+      log(`HEALTH: ${name} auto-restarting...`);
+      const [ok, msg] = await startServer(name);
+      log(`HEALTH: ${name} restart -> ${ok ? "OK" : msg}`);
+    }
   }
 }
 
