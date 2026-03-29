@@ -55,6 +55,7 @@ export interface McpmContext {
   TOOLS: Record<string, Tool[]>;
   TOOL_MAP: Record<string, string>;
   BASE_DIR: string;
+  MCP_ROOT: string;
   SERVERS_FILE: string;
   log: (message: string) => void;
   loadServersConfig: () => number;

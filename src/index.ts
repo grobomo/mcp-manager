@@ -496,6 +496,7 @@ function getContext(): McpmContext {
     TOOLS,
     TOOL_MAP,
     BASE_DIR,
+    MCP_ROOT,
     SERVERS_FILE,
     log,
     loadServersConfig,

@@ -85,7 +85,7 @@ interface DiscoveredServer {
 }
 
 function discoverNewServers(ctx: McpmContext): DiscoveredServer[] {
-  const MCP_ROOT = join(ctx.BASE_DIR, "..");
+  const MCP_ROOT = ctx.MCP_ROOT;
   const discovered: DiscoveredServer[] = [];
 
   if (!existsSync(MCP_ROOT)) return discovered;
@@ -172,7 +172,7 @@ function discoverNewServers(ctx: McpmContext): DiscoveredServer[] {
 }
 
 function createMetadataYaml(ctx: McpmContext, server: DiscoveredServer): boolean {
-  const MCP_ROOT = join(ctx.BASE_DIR, "..");
+  const MCP_ROOT = ctx.MCP_ROOT;
   const metadataPath = join(MCP_ROOT, server.name, "metadata.yaml");
 
   if (existsSync(metadataPath)) return false;

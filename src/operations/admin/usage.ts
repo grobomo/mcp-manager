@@ -79,7 +79,7 @@ export async function usage(ctx: McpmContext): Promise<OperationResult> {
   const usageMap = scanProjectUsage(ctx);
   const lines = ["# MCP Server Usage", ""];
 
-  const MCP_ROOT = join(ctx.BASE_DIR, "..");
+  const MCP_ROOT = ctx.MCP_ROOT;
   const allServers: string[] = [];
 
   try {

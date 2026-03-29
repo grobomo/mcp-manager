@@ -79,7 +79,7 @@ export async function listServers(ctx: McpmContext): Promise<OperationResult> {
 
   // Show unregistered servers (only if no project filtering)
   if (!ctx.allowedServers) {
-    const MCP_ROOT = join(ctx.BASE_DIR, "..");
+    const MCP_ROOT = ctx.MCP_ROOT;
     const folders = existsSync(MCP_ROOT)
       ? readdirSync(MCP_ROOT).filter((f: string) =>
           f.startsWith("mcp-") &&

@@ -54,6 +54,7 @@ function makeContext(overrides: Partial<McpmContext> = {}): McpmContext {
     },
     TOOL_MAP: {},
     BASE_DIR: "/tmp/test",
+    MCP_ROOT: "/tmp",
     SERVERS_FILE: "/tmp/test/servers.yaml",
     log: () => {},
     loadServersConfig: () => 0,
