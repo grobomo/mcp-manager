@@ -1,11 +1,13 @@
 # mcp-manager
 
-## Status: All tasks complete. 72 tests passing. Pushed.
+## Status: All tasks complete. 72 tests passing. CI green. Pushed.
 
-## Completed this session (2026-03-28)
+## Completed (2026-03-29)
 - [x] Extract duplicated server cleanup into `cleanupServer()` helper (DRY — was in 3 places)
 - [x] Fix HTTP health check: reject pending requests before removing server
 - [x] Remove unused imports (ChildProcess, readdirSync)
+- [x] Fix CI: exclude tests/ from secret scan (test files contain intentional example secrets)
+- [x] Fix credential helper double-backslash escaping
 - [x] Fix stdio transport concurrency bug — persistent readline per server with request ID dispatch
 - [x] Clean up readline and pending requests on server stop and crash detection
 - [x] Add test coverage for utils.ts (sanitizeLog, validatePath, formatBytes) — 17 tests
